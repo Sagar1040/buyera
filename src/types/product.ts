@@ -44,24 +44,24 @@ export interface ProductType {
   id: string;
   name: string;
   slug: string;
-  description: string;
+  description?: string;
   shortDesc?: string | null;
   fabricCare?: string | null;
   mrp: number;
   price: number;
   sku: string;
-  isFeatured: boolean;
-  isNew: boolean;
-  isBestSeller: boolean;
-  isActive: boolean;
-  tags: string[];
+  isFeatured?: boolean;
+  isNew?: boolean;
+  isBestSeller?: boolean;
+  isActive?: boolean;
+  tags?: string[];
   categoryId: string;
   category?: CategoryType;
   images: ProductImageType[];
-  variants: ProductVariantType[];
+  variants?: ProductVariantType[];
   reviews?: ReviewType[];
-  createdAt: string | Date;
-  updatedAt: string | Date;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface ProductFilterParams {
