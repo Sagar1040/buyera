@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
+import { Logo } from "@/components/ui/Logo";
 
 // Helper to dynamically load Razorpay script
 function loadRazorpayScript(): Promise<boolean> {
@@ -234,13 +235,18 @@ export default function CheckoutPage() {
   return (
     <div className="container mx-auto px-4 lg:px-8 py-12">
       <div className="max-w-5xl mx-auto space-y-8">
-        <Link
-          href="/cart"
-          className="inline-flex items-center gap-1.5 text-xs text-charcoal/60 hover:text-charcoal transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to Shopping Bag
-        </Link>
+        <div className="flex items-center justify-between border-b border-canvas-border pb-4">
+          <Link
+            href="/cart"
+            className="inline-flex items-center gap-1.5 text-xs text-charcoal/60 hover:text-charcoal transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to Shopping Bag
+          </Link>
+          <Link href="/">
+            <Logo size="sm" />
+          </Link>
+        </div>
 
         {error && (
           <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Logo } from "@/components/ui/Logo";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -44,15 +45,18 @@ export default function RegisterPage() {
   return (
     <div className="min-h-[75vh] flex items-center justify-center px-4 py-16 bg-canvas">
       <div className="w-full max-w-md bg-white border border-canvas-border p-8 sm:p-10 shadow-luxury">
-        <div className="text-center mb-8 space-y-2">
+        <div className="text-center mb-8 space-y-3 flex flex-col items-center">
+          <Link href="/">
+            <Logo size="md" showTagline={true} />
+          </Link>
           <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-brand-badge font-semibold">
             THE PRIVÉ ATELIER
           </span>
-          <h1 className="font-editorial-heading text-2xl sm:text-3xl text-charcoal font-normal">
-            Create Your Account
+          <h1 className="font-editorial-heading text-2xl text-charcoal font-normal">
+            Create an Account
           </h1>
           <p className="text-xs text-charcoal/60">
-            Join BUYERA for personalized shopping and member privileges.
+            Join the BUYERA Privé Circle for exclusive previews and privileges.
           </p>
         </div>
 

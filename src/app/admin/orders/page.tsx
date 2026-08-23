@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 
 interface OrderItemAdmin {
   id: string;
@@ -119,14 +120,19 @@ export default function AdminOrdersPage() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-canvas-border pb-6 gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-gold font-semibold">
-              <Shield className="w-4 h-4" />
-              Admin Portal
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Logo size="sm" />
+            </Link>
+            <div className="border-l border-canvas-border pl-4">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-gold font-semibold">
+                <Shield className="w-4 h-4" />
+                Admin Portal
+              </div>
+              <h1 className="font-editorial-heading text-3xl text-charcoal mt-1">
+                Orders Management
+              </h1>
             </div>
-            <h1 className="font-editorial-heading text-3xl text-charcoal mt-1">
-              Orders Management
-            </h1>
           </div>
 
           <div className="flex items-center gap-3">

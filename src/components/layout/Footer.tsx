@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Globe,
 } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 export function Footer() {
   return (
@@ -23,13 +24,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Brand Intro */}
           <div className="lg:col-span-2 space-y-4">
-            <Link href="/" className="inline-block">
-              <span className="font-editorial-heading text-2xl font-bold tracking-[0.22em] text-cream-50">
-                BUYERA
-              </span>
-              <span className="block text-[8px] uppercase tracking-[0.3em] text-gold font-sans font-light">
-                Elegance • Modesty • You
-              </span>
+            <Link href="/" className="inline-block bg-white/90 p-2 border border-white/20 shadow-sm">
+              <Logo size="md" showTagline={true} />
             </Link>
 
             <p className="text-xs text-cream-300/80 font-light leading-relaxed max-w-sm">

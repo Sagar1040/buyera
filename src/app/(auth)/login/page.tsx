@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { CheckCircle2 } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 function LoginForm() {
   const router = useRouter();
@@ -24,29 +25,38 @@ function LoginForm() {
     setLoading(true);
     setError(null);
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+        callbackUrl,
+      });
 
-    if (res?.error) {
-      setError("Invalid email or password");
+      if (res?.error) {
+        setError("Invalid email or password. Please try again.");
+      } else {
+        router.push(callbackUrl);
+        router.refresh();
+      }
+    } catch (err) {
+      setError("An unexpected authentication error occurred.");
+    } finally {
       setLoading(false);
-    } else {
-      router.push(callbackUrl);
-      router.refresh();
     }
   };
 
   return (
     <div className="w-full max-w-md bg-white border border-canvas-border p-8 sm:p-10 shadow-luxury">
-      <div className="text-center mb-8 space-y-2">
+      <div className="text-center mb-8 space-y-3 flex flex-col items-center">
+        <Link href="/">
+          <Logo size="md" showTagline={true} />
+        </Link>
         <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-brand-badge font-semibold">
           THE PRIVÉ ATELIER
         </span>
-        <h1 className="font-editorial-heading text-2xl sm:text-3xl text-charcoal font-normal">
-          Sign In to BUYERA
+        <h1 className="font-editorial-heading text-2xl text-charcoal font-normal">
+          Member Sign In
         </h1>
         <p className="text-xs text-charcoal/60">
           Access your saved silhouettes, orders, and wishlist.

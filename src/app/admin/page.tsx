@@ -11,6 +11,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 
 export default function AdminDashboardPage() {
   const kpis = [
@@ -75,13 +76,18 @@ export default function AdminDashboardPage() {
     <div className="container mx-auto px-4 lg:px-8 py-10 space-y-8">
       {/* Header with Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-canvas-border pb-6">
-        <div>
-          <span className="text-[10px] font-brand-badge tracking-[0.25em] uppercase text-gold font-semibold">
-            BUYERA BACK-OFFICE
-          </span>
-          <h1 className="font-editorial-heading text-2xl sm:text-3xl text-charcoal">
-            Operations & Analytics
-          </h1>
+        <div className="flex items-center gap-4">
+          <Link href="/">
+            <Logo size="sm" />
+          </Link>
+          <div className="border-l border-canvas-border pl-4">
+            <span className="text-[10px] font-brand-badge tracking-[0.25em] uppercase text-gold font-semibold">
+              BUYERA BACK-OFFICE
+            </span>
+            <h1 className="font-editorial-heading text-2xl sm:text-3xl text-charcoal">
+              Operations & Analytics
+            </h1>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

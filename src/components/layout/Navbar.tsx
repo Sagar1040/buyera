@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
+import { Logo } from "@/components/ui/Logo";
 
 export function Navbar() {
   const router = useRouter();
@@ -259,12 +260,7 @@ export function Navbar() {
           {/* Centered Brand Identity */}
           <div className="flex items-center">
             <Link href="/" className="flex flex-col items-start group">
-              <span className="font-editorial-heading text-2xl sm:text-3xl font-bold tracking-[0.24em] text-charcoal group-hover:text-gold transition-colors">
-                BUYERA
-              </span>
-              <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.35em] text-charcoal/60 font-sans font-light -mt-1">
-                Elegance • Modesty • You
-              </span>
+              <Logo size="md" showTagline={true} />
             </Link>
           </div>
 

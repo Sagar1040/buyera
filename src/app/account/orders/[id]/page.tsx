@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 
 export default function OrderTrackingPage({
   params,
@@ -99,9 +100,12 @@ export default function OrderTrackingPage({
     <div className="container mx-auto px-4 lg:px-8 py-12">
       <div className="max-w-4xl mx-auto space-y-10">
         {/* Success Banner */}
-        <div className="bg-white border border-canvas-border p-8 text-center space-y-4 shadow-luxury">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-8 h-8" />
+        <div className="bg-white border border-canvas-border p-8 text-center space-y-4 shadow-luxury flex flex-col items-center">
+          <Link href="/" className="mb-2">
+            <Logo size="md" showTagline={true} />
+          </Link>
+          <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center">
+            <CheckCircle2 className="w-7 h-7" />
           </div>
           <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-brand-badge font-semibold">
             ORDER COMMITTED
