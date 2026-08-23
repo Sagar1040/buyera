@@ -13,6 +13,8 @@ export type OrderStatusType =
 
 export type PaymentStatusType = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
 
+export type PaymentMethodType = "RAZORPAY" | "COD";
+
 export interface AddressType {
   id: string;
   userId?: string;
@@ -44,7 +46,8 @@ export interface OrderItemType {
 export interface PaymentType {
   id: string;
   orderId: string;
-  razorpayOrderId: string;
+  paymentMethod: PaymentMethodType;
+  razorpayOrderId?: string | null;
   razorpayPaymentId?: string | null;
   status: PaymentStatusType;
   amount: number;
@@ -77,6 +80,7 @@ export interface OrderType {
   total: number;
   orderStatus: OrderStatusType;
   paymentStatus: PaymentStatusType;
+  paymentMethod: PaymentMethodType;
   notes?: string | null;
   items: OrderItemType[];
   payment?: PaymentType | null;

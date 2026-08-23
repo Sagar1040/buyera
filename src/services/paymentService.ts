@@ -1,4 +1,4 @@
-import { razorpay, verifyRazorpaySignature } from "@/lib/razorpay";
+import { getRazorpay, verifyRazorpaySignature } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 import { PaymentStatus } from "@prisma/client";
 
@@ -18,7 +18,8 @@ export class PaymentService {
       },
     };
 
-    const razorpayOrder = await razorpay.orders.create(options);
+    const rzp = getRazorpay();
+    const razorpayOrder = await rzp.orders.create(options);
     return razorpayOrder;
   }
 

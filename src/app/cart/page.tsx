@@ -3,86 +3,80 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
+import { useCart } from "@/context/CartContext";
 
 export default function CartPage() {
-  const [items, setItems] = useState([
-    {
-      id: "item-1",
-      name: "Royal Emerald Hand-Embroidered Abaya",
-      size: "56 (M)",
-      color: "Emerald Green",
-      price: 4999,
-      mrp: 6999,
-      quantity: 1,
-      image:
-        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
-    },
-    {
-      id: "item-2",
-      name: "Pure Medina Silk Luxury Shayla Hijab",
-      size: "One Size",
-      color: "Champagne Ivory",
-      price: 999,
-      mrp: 1499,
-      quantity: 1,
-      image:
-        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop",
-    },
-  ]);
+  const {
+    items,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    subtotal,
+    discount,
+    couponCode,
+    shipping,
+    total,
+    applyCoupon,
+    removeCoupon,
+  } = useCart();
 
-  const updateQuantity = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev
-        .map((item) => {
-          if (item.id === id) {
-            const newQty = item.quantity + delta;
-            return newQty > 0 ? { ...item, quantity: newQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean) as typeof items
-    );
+  const [inputCoupon, setInputCoupon] = useState("");
+  const [couponMsg, setCouponMsg] = useState<{ success?: boolean; text?: string } | null>(null);
+  const [loadingCoupon, setLoadingCoupon] = useState(false);
+
+  const handleCouponSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputCoupon.trim()) return;
+    setLoadingCoupon(true);
+    const res = await applyCoupon(inputCoupon);
+    setCouponMsg({ success: res.success, text: res.message });
+    setLoadingCoupon(false);
   };
-
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const freeShippingThreshold = 999;
-  const shipping = subtotal >= freeShippingThreshold ? 0 : 99;
-  const total = subtotal + shipping;
 
   return (
     <div className="container mx-auto px-4 lg:px-8 py-12">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Cart Title */}
-        <div className="text-center space-y-1">
-          <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-brand-badge font-semibold">
-            YOUR BAG
-          </span>
-          <h1 className="font-editorial-heading text-3xl text-charcoal">
-            Shopping Bag ({items.length})
-          </h1>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-canvas-border pb-6 gap-4">
+          <div>
+            <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-brand-badge font-semibold">
+              YOUR BAG
+            </span>
+            <h1 className="font-editorial-heading text-3xl text-charcoal">
+              Shopping Bag ({items.length})
+            </h1>
+          </div>
+
+          {items.length > 0 && (
+            <button
+              onClick={clearCart}
+              className="text-xs uppercase tracking-widest text-charcoal/50 hover:text-rose-600 transition-colors self-start sm:self-auto"
+            >
+              Empty Bag
+            </button>
+          )}
         </div>
 
         {items.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-canvas-border space-y-4">
+          <div className="text-center py-20 bg-white border border-canvas-border space-y-4 shadow-sm max-w-md mx-auto p-8">
             <ShoppingBag className="w-12 h-12 text-gold mx-auto" />
-            <h2 className="font-editorial-heading text-xl text-charcoal">
+            <h2 className="font-editorial-heading text-2xl text-charcoal">
               Your shopping bag is currently empty
             </h2>
-            <p className="text-xs text-charcoal/60">
-              Discover our latest luxury abayas and Medina silk hijabs.
+            <p className="text-xs text-charcoal/60 leading-relaxed">
+              Discover our latest luxury abayas, medina silk hijabs, and festive couture.
             </p>
-            <Link href="/shop" className="inline-block pt-2">
-              <Button variant="gold" size="md">
-                EXPLORE CATALOG
-              </Button>
-            </Link>
+            <div className="pt-2">
+              <Link href="/shop" className="inline-block">
+                <Button variant="gold" size="lg">
+                  EXPLORE COLLECTIONS
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -91,7 +85,7 @@ export default function CartPage() {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 p-4 bg-white border border-canvas-border shadow-sm items-center"
+                  className="flex gap-4 p-4 bg-white border border-canvas-border shadow-sm items-center hover:border-gold/30 transition-colors"
                 >
                   <div className="relative w-20 h-24 bg-cream-100 shrink-0">
                     <Image
@@ -103,9 +97,12 @@ export default function CartPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xs sm:text-sm font-medium text-charcoal line-clamp-1">
+                    <Link
+                      href={`/product/${item.slug}`}
+                      className="text-xs sm:text-sm font-medium text-charcoal hover:text-gold transition-colors line-clamp-1"
+                    >
                       {item.name}
-                    </h3>
+                    </Link>
                     <p className="text-[11px] text-charcoal/60 mt-0.5">
                       Size: {item.size} • Color: {item.color}
                     </p>
@@ -124,7 +121,7 @@ export default function CartPage() {
                   {/* Quantity Controls */}
                   <div className="flex items-center border border-canvas-border bg-canvas">
                     <button
-                      onClick={() => updateQuantity(item.id, -1)}
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       className="p-1.5 text-charcoal hover:bg-cream-200"
                       aria-label="Decrease quantity"
                     >
@@ -132,7 +129,7 @@ export default function CartPage() {
                     </button>
                     <span className="px-3 text-xs font-semibold">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, 1)}
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       className="p-1.5 text-charcoal hover:bg-cream-200"
                       aria-label="Increase quantity"
                     >
@@ -141,7 +138,7 @@ export default function CartPage() {
                   </div>
 
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeFromCart(item.id)}
                     className="p-2 text-charcoal/40 hover:text-rose-500 transition-colors"
                     aria-label="Remove Item"
                   >
@@ -151,21 +148,79 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* Order Summary Box */}
+            {/* Order Summary & Coupon Box */}
             <div className="bg-white border border-canvas-border p-6 shadow-luxury space-y-5 self-start">
               <h2 className="font-editorial-heading text-lg text-charcoal border-b border-canvas-border pb-3">
                 Order Summary
               </h2>
 
-              <div className="space-y-2.5 text-xs text-charcoal/70">
+              {/* Coupon Form */}
+              <form onSubmit={handleCouponSubmit} className="space-y-2">
+                <label className="block text-[11px] uppercase tracking-wider text-charcoal/70 font-medium">
+                  Promotional Voucher
+                </label>
+                {couponCode ? (
+                  <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
+                    <div className="flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="font-semibold">{couponCode}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeCoupon}
+                      className="text-emerald-700 hover:text-rose-600"
+                      aria-label="Remove Coupon"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={inputCoupon}
+                      onChange={(e) => setInputCoupon(e.target.value)}
+                      placeholder="e.g. BUYERA10"
+                      className="flex-1 px-3 py-2 text-xs uppercase bg-canvas border border-canvas-border focus:outline-none focus:border-gold"
+                    />
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="sm"
+                      isLoading={loadingCoupon}
+                    >
+                      APPLY
+                    </Button>
+                  </div>
+                )}
+                {couponMsg && (
+                  <p
+                    className={`text-[11px] font-medium ${
+                      couponMsg.success ? "text-emerald-600" : "text-rose-500"
+                    }`}
+                  >
+                    {couponMsg.text}
+                  </p>
+                )}
+              </form>
+
+              <div className="space-y-2.5 text-xs text-charcoal/70 border-t border-canvas-border pt-4">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
+                  <span>Subtotal ({items.length} items)</span>
                   <span className="font-medium text-charcoal">
                     {formatPrice(subtotal)}
                   </span>
                 </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Voucher Discount</span>
+                    <span>-{formatPrice(discount)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between">
-                  <span>Estimated Shipping</span>
+                  <span>Complimentary Shipping</span>
                   <span className="font-medium text-charcoal">
                     {shipping === 0 ? "FREE" : formatPrice(shipping)}
                   </span>
@@ -174,9 +229,9 @@ export default function CartPage() {
 
               <div className="pt-3 border-t border-canvas-border flex justify-between items-baseline">
                 <span className="text-sm font-semibold text-charcoal">
-                  Total Payable
+                  Total Amount
                 </span>
-                <span className="text-lg font-bold text-charcoal">
+                <span className="text-xl font-bold text-charcoal">
                   {formatPrice(total)}
                 </span>
               </div>

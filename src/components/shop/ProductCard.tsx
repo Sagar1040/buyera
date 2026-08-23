@@ -3,25 +3,43 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, Check } from "lucide-react";
 import { ProductType } from "@/types/product";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
+import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/context/CartContext";
 
 interface ProductCardProps {
   product: ProductType;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { addToCart } = useCart();
+  const [added, setAdded] = React.useState(false);
+
+  const isFavorited = isInWishlist(product.id);
+
   const primaryImage =
     product.images?.find((img) => img.isPrimary)?.url ||
     product.images?.[0]?.url ||
     "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop";
 
-  const hoverImage =
-    product.images?.[1]?.url || primaryImage;
-
   const discountPercent = calculateDiscount(product.mrp, product.price);
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addToCart(product, { quantity: 1 });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
+
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(product);
+  };
 
   return (
     <div className="group relative flex flex-col bg-white border border-canvas-border transition-all duration-300 hover:shadow-luxury">
@@ -46,25 +64,43 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Quick Action Buttons (Wishlist & Quick Add) */}
-        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+        {/* Wishlist Toggle Button */}
+        <div className="absolute top-3 right-3 z-20">
           <button
-            aria-label="Add to Wishlist"
-            className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-charcoal hover:text-rose-500 flex items-center justify-center shadow-md transition-all duration-200 hover:scale-110"
+            onClick={handleToggleWishlist}
+            aria-label={isFavorited ? "Remove from Wishlist" : "Add to Wishlist"}
+            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 hover:scale-110 ${
+              isFavorited
+                ? "bg-rose-500 text-white"
+                : "bg-white/90 backdrop-blur-sm text-charcoal hover:text-rose-500"
+            }`}
           >
-            <Heart className="w-4 h-4" />
+            <Heart
+              className={`w-4 h-4 transition-colors ${
+                isFavorited ? "fill-current" : ""
+              }`}
+            />
           </button>
         </div>
 
         {/* Quick Add To Bag Bar on Hover */}
-        <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-charcoal/80 via-charcoal/40 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <Link
-            href={`/product/${product.slug}`}
+        <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-charcoal/80 via-charcoal/40 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
+          <button
+            onClick={handleQuickAdd}
             className="w-full py-2.5 bg-white text-charcoal hover:bg-gold hover:text-white text-[11px] font-medium tracking-widest uppercase flex items-center justify-center gap-1.5 transition-colors shadow-sm"
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            SELECT OPTIONS
-          </Link>
+            {added ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                ADDED TO BAG
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-3.5 h-3.5" />
+                QUICK ADD TO BAG
+              </>
+            )}
+          </button>
         </div>
       </div>
 

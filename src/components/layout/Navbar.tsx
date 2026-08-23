@@ -1,12 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Search, Heart, ShoppingBag, User, Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+import { Search, Heart, ShoppingBag, User, Menu, X, LogOut, Package, Shield, ChevronDown } from "lucide-react";
+import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/context/CartContext";
 
 export function Navbar() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const { wishlistCount } = useWishlist();
+  const { cartCount } = useCart();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const categories = [
     { name: "Abayas", href: "/category/abayas" },
@@ -16,6 +27,22 @@ export function Navbar() {
     { name: "New In", href: "/shop?sort=newest" },
     { name: "Bestsellers", href: "/shop?tag=bestseller" },
   ];
+
+  // Close user dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSignOut = async () => {
+    setUserDropdownOpen(false);
+    await signOut({ callbackUrl: "/" });
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-cream/90 backdrop-blur-md border-b border-canvas-border transition-all duration-300">
@@ -57,7 +84,7 @@ export function Navbar() {
           </div>
 
           {/* Right Action Icons */}
-          <div className="flex items-center space-x-4 sm:space-x-6">
+          <div className="flex items-center space-x-3 sm:space-x-5">
             {/* Search Icon */}
             <button
               onClick={() => setSearchOpen(!searchOpen)}
@@ -67,38 +94,127 @@ export function Navbar() {
               <Search className="w-5 h-5" />
             </button>
 
-            {/* Wishlist */}
+            {/* Wishlist with Live Counter */}
             <Link
               href="/wishlist"
               className="p-2 text-charcoal hover:text-gold transition-colors relative"
               aria-label="Wishlist"
             >
               <Heart className="w-5 h-5" />
-              <span className="absolute top-1 right-1 bg-gold text-charcoal text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                0
-              </span>
+              {wishlistCount > 0 && (
+                <span className="absolute top-1 right-1 bg-gold text-charcoal text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-fadeIn">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
 
-            {/* User Profile */}
-            <Link
-              href="/account"
-              className="p-2 text-charcoal hover:text-gold transition-colors hidden sm:inline-block"
-              aria-label="Account"
-            >
-              <User className="w-5 h-5" />
-            </Link>
-
-            {/* Shopping Bag / Cart */}
+            {/* Shopping Bag with Live Counter */}
             <Link
               href="/cart"
               className="p-2 text-charcoal hover:text-gold transition-colors relative"
               aria-label="Shopping Bag"
             >
               <ShoppingBag className="w-5 h-5" />
-              <span className="absolute top-1 right-1 bg-charcoal text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                0
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute top-1 right-1 bg-charcoal text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-fadeIn">
+                  {cartCount}
+                </span>
+              )}
             </Link>
+
+            {/* User Profile & Auth Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              {status === "authenticated" && session?.user ? (
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-1.5 p-1.5 border border-canvas-border hover:border-gold text-charcoal transition-colors rounded-none"
+                  aria-label="User Account Menu"
+                >
+                  <div className="w-6 h-6 rounded-full bg-cream-200 text-gold-dark text-[10px] font-bold flex items-center justify-center uppercase">
+                    {session.user.name?.charAt(0) || "U"}
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-charcoal/60" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="p-2 text-charcoal hover:text-gold transition-colors"
+                  aria-label="Account Login"
+                >
+                  <User className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* User Dropdown Menu */}
+              {userDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-canvas-border shadow-luxury py-2 z-50 animate-fadeIn">
+                  {status === "authenticated" && session?.user ? (
+                    <>
+                      <div className="px-4 py-3 border-b border-canvas-border">
+                        <p className="text-xs font-semibold text-charcoal truncate">
+                          {session.user.name}
+                        </p>
+                        <p className="text-[11px] text-charcoal/50 truncate font-mono">
+                          {session.user.email}
+                        </p>
+                      </div>
+
+                      <Link
+                        href="/account"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-charcoal hover:bg-cream-50 hover:text-gold transition-colors"
+                      >
+                        <Package className="w-4 h-4 text-gold-dark" />
+                        My Orders & Tracking
+                      </Link>
+
+                      {session.user.role === "ADMIN" && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-charcoal hover:bg-cream-50 hover:text-gold transition-colors"
+                        >
+                          <Shield className="w-4 h-4 text-gold-dark" />
+                          Admin Portal
+                        </Link>
+                      )}
+
+                      <div className="border-t border-canvas-border my-1" />
+
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs text-rose-600 hover:bg-rose-50 transition-colors text-left"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="px-4 py-2 text-[10px] uppercase tracking-widest text-charcoal/50 font-semibold">
+                        Welcome to BUYERA
+                      </div>
+                      <Link
+                        href="/login"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center justify-between px-4 py-2.5 text-xs font-medium text-charcoal hover:bg-cream-50 hover:text-gold transition-colors"
+                      >
+                        <span>Sign In</span>
+                        <span className="text-[10px] text-gold uppercase tracking-wider">Members</span>
+                      </Link>
+                      <Link
+                        href="/register"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center justify-between px-4 py-2.5 text-xs text-charcoal/80 hover:bg-cream-50 hover:text-gold transition-colors"
+                      >
+                        <span>Create Account</span>
+                        <span className="text-[10px] text-charcoal/40 uppercase tracking-wider">Join Privé</span>
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -132,21 +248,41 @@ export function Navbar() {
               {cat.name}
             </Link>
           ))}
-          <div className="pt-4 flex items-center justify-between">
-            <Link
-              href="/account"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-xs uppercase tracking-widest text-gold-dark font-semibold"
-            >
-              My Account
-            </Link>
-            <Link
-              href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-xs uppercase tracking-widest text-charcoal/60"
-            >
-              Admin Portal
-            </Link>
+          <div className="pt-4 space-y-2">
+            {status === "authenticated" && session?.user ? (
+              <>
+                <Link
+                  href="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-xs uppercase tracking-widest text-gold-dark font-semibold py-1.5"
+                >
+                  My Account ({session.user.name})
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="block text-xs uppercase tracking-widest text-rose-600 font-semibold py-1.5"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center justify-between pt-2">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-xs uppercase tracking-widest text-charcoal font-semibold"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-xs uppercase tracking-widest text-gold font-semibold"
+                >
+                  Create Account
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

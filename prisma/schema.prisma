@@ -36,6 +36,11 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum PaymentMethod {
+  RAZORPAY
+  COD
+}
+
 enum DiscountType {
   PERCENTAGE
   FIXED
@@ -226,6 +231,7 @@ model Order {
   total           Float
   orderStatus     OrderStatus    @default(PLACED)
   paymentStatus   PaymentStatus  @default(PENDING)
+  paymentMethod   PaymentMethod  @default(RAZORPAY)
   notes           String?
   payment         Payment?
   shipment        Shipment?
@@ -236,6 +242,7 @@ model Order {
   @@index([userId])
   @@index([orderNumber])
   @@index([orderStatus])
+  @@index([paymentMethod])
 }
 
 model OrderItem {
@@ -259,7 +266,8 @@ model Payment {
   id                String        @id @default(uuid())
   orderId           String        @unique
   order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  razorpayOrderId   String        @unique
+  paymentMethod     PaymentMethod @default(RAZORPAY)
+  razorpayOrderId   String?       @unique
   razorpayPaymentId String?       @unique
   signature         String?
   status            PaymentStatus @default(PENDING)
@@ -270,6 +278,7 @@ model Payment {
   updatedAt         DateTime      @updatedAt
 
   @@index([razorpayOrderId])
+  @@index([paymentMethod])
 }
 
 model Shipment {

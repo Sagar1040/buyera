@@ -3,25 +3,33 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingBag, Truck, ShieldCheck, ChevronDown } from "lucide-react";
+import { Heart, ShoppingBag, Truck, ShieldCheck, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
+import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/context/CartContext";
+import { ProductType } from "@/types/product";
 
 export default function ProductDetailPage({
   params,
 }: {
   params: { slug: string };
 }) {
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { addToCart } = useCart();
+
   const [selectedSize, setSelectedSize] = useState("56 (M)");
   const [selectedColor, setSelectedColor] = useState("Emerald Green");
   const [selectedImage, setSelectedImage] = useState(0);
+  const [added, setAdded] = useState(false);
   const [descOpen, setDescOpen] = useState(true);
   const [careOpen, setCareOpen] = useState(false);
   const [shippingOpen, setShippingOpen] = useState(false);
 
-  // Mock product data for PDP
-  const product = {
+  // Mock product object matching ProductType
+  const product: ProductType = {
+    id: "prod-1",
     name: "Royal Emerald Hand-Embroidered Abaya",
     slug: params.slug,
     sku: "BUY-ABY-001",
@@ -29,24 +37,46 @@ export default function ProductDetailPage({
     price: 4999,
     isNew: true,
     isBestSeller: true,
-    category: { name: "Luxury Abayas", slug: "abayas" },
+    isFeatured: true,
+    isActive: true,
+    tags: ["abaya", "luxury"],
+    categoryId: "cat-1",
+    category: { id: "cat-1", name: "Luxury Abayas", slug: "abayas", isActive: true, order: 1 },
     images: [
-      "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1200&auto=format&fit=crop",
+      { id: "img-1", url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200&auto=format&fit=crop", isPrimary: true, order: 1 },
+      { id: "img-2", url: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1200&auto=format&fit=crop", isPrimary: false, order: 2 },
     ],
-    sizes: ["52 (XS)", "54 (S)", "56 (M)", "58 (L)", "60 (XL)"],
-    colors: [
-      { name: "Emerald Green", hex: "#0F3827" },
-      { name: "Midnight Obsidian", hex: "#121212" },
-      { name: "Muted Champagne", hex: "#C5A880" },
+    variants: [
+      { id: "v-1", productId: "prod-1", size: "54 (S)", color: "Emerald Green", colorHex: "#0F3827", stock: 10, sku: "BUY-ABY-001-54" },
+      { id: "v-2", productId: "prod-1", size: "56 (M)", color: "Emerald Green", colorHex: "#0F3827", stock: 15, sku: "BUY-ABY-001-56" },
     ],
     description:
       "Crafted with unparalleled precision from premium Korean Nida fabric. This masterpiece features intricate metallic zardozi hand-embroidery along the wide cuffs, designed for high-profile festive gatherings and wedding receptions. Includes a matching luxury chiffon shayla hijab.",
     fabricCare:
       "100% Grade-A Korean Nida. Dry clean recommended. Do not bleach. Steam iron on reverse at low temperature.",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
+  const sizes = ["52 (XS)", "54 (S)", "56 (M)", "58 (L)", "60 (XL)"];
+  const colors = [
+    { name: "Emerald Green", hex: "#0F3827" },
+    { name: "Midnight Obsidian", hex: "#121212" },
+    { name: "Muted Champagne", hex: "#C5A880" },
+  ];
+
   const discount = calculateDiscount(product.mrp, product.price);
+  const isFavorited = isInWishlist(product.id);
+
+  const handleAddToCart = () => {
+    addToCart(product, {
+      size: selectedSize,
+      color: selectedColor,
+      quantity: 1,
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
 
   return (
     <div className="container mx-auto px-4 lg:px-8 py-12">
@@ -56,8 +86,8 @@ export default function ProductDetailPage({
         <span>/</span>
         <Link href="/shop" className="hover:text-charcoal">Shop</Link>
         <span>/</span>
-        <Link href={`/category/${product.category.slug}`} className="hover:text-charcoal">
-          {product.category.name}
+        <Link href={`/category/${product.category?.slug}`} className="hover:text-charcoal">
+          {product.category?.name}
         </Link>
         <span>/</span>
         <span className="text-charcoal font-medium truncate max-w-xs">{product.name}</span>
@@ -68,7 +98,7 @@ export default function ProductDetailPage({
         <div className="space-y-4">
           <div className="relative aspect-[3/4] w-full overflow-hidden bg-cream-100 border border-canvas-border shadow-sm">
             <Image
-              src={product.images[selectedImage]}
+              src={product.images[selectedImage].url}
               alt={product.name}
               fill
               priority
@@ -90,7 +120,7 @@ export default function ProductDetailPage({
                   selectedImage === idx ? "border-gold ring-1 ring-gold" : "border-canvas-border opacity-70 hover:opacity-100"
                 }`}
               >
-                <Image src={img} alt="Thumbnail" fill className="object-cover" />
+                <Image src={img.url} alt="Thumbnail" fill className="object-cover" />
               </button>
             ))}
           </div>
@@ -100,7 +130,7 @@ export default function ProductDetailPage({
         <div className="space-y-6">
           <div>
             <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-brand-badge font-semibold">
-              {product.category.name}
+              {product.category?.name}
             </span>
             <h1 className="font-editorial-heading text-2xl sm:text-3xl text-charcoal font-normal mt-1">
               {product.name}
@@ -134,7 +164,7 @@ export default function ProductDetailPage({
               Color: <span className="font-normal text-charcoal/70">{selectedColor}</span>
             </label>
             <div className="flex items-center gap-3">
-              {product.colors.map((c) => (
+              {colors.map((c) => (
                 <button
                   key={c.name}
                   onClick={() => setSelectedColor(c.name)}
@@ -159,7 +189,7 @@ export default function ProductDetailPage({
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {product.sizes.map((s) => (
+              {sizes.map((s) => (
                 <button
                   key={s}
                   onClick={() => setSelectedSize(s)}
@@ -177,17 +207,34 @@ export default function ProductDetailPage({
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-4 pt-2">
-            <Link href="/cart" className="flex-1">
-              <Button variant="gold" size="lg" className="w-full">
-                <ShoppingBag className="w-4 h-4 mr-2" />
-                ADD TO SHOPPING BAG
-              </Button>
-            </Link>
-            <button
-              aria-label="Add to Wishlist"
-              className="p-3.5 border border-canvas-border hover:border-rose-400 text-charcoal hover:text-rose-500 transition-colors"
+            <Button
+              onClick={handleAddToCart}
+              variant="gold"
+              size="lg"
+              className="flex-1"
             >
-              <Heart className="w-5 h-5" />
+              {added ? (
+                <>
+                  <Check className="w-4 h-4 mr-2 text-emerald-700" />
+                  ADDED TO SHOPPING BAG
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-4 h-4 mr-2" />
+                  ADD TO SHOPPING BAG
+                </>
+              )}
+            </Button>
+            <button
+              onClick={() => toggleWishlist(product)}
+              aria-label={isFavorited ? "Remove from Wishlist" : "Add to Wishlist"}
+              className={`p-3.5 border transition-all ${
+                isFavorited
+                  ? "border-rose-500 bg-rose-50 text-rose-500"
+                  : "border-canvas-border hover:border-rose-400 text-charcoal hover:text-rose-500"
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${isFavorited ? "fill-current" : ""}`} />
             </button>
           </div>
 

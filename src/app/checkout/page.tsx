@@ -2,157 +2,524 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ShieldCheck, Lock, ArrowLeft, Tag } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import {
+  ShieldCheck,
+  Lock,
+  ArrowLeft,
+  CheckCircle2,
+  AlertCircle,
+  CreditCard,
+  Banknote,
+  Check,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { formatPrice } from "@/lib/utils";
+import { useCart } from "@/context/CartContext";
+
+// Helper to dynamically load Razorpay script
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") {
+      resolve(false);
+      return;
+    }
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 export default function CheckoutPage() {
-  const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState(false);
-  const [discount, setDiscount] = useState(0);
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { items, subtotal, discount, shipping, total, couponCode, clearCart } = useCart();
 
-  const subtotal = 5998;
-  const shipping = subtotal >= 999 ? 0 : 99;
-  const total = Math.max(0, subtotal - discount + shipping);
+  // Form State
+  const [address, setAddress] = useState({
+    fullName: session?.user?.name || "",
+    email: session?.user?.email || "",
+    phone: "",
+    houseFlat: "",
+    street: "",
+    area: "",
+    city: "Bengaluru",
+    district: "Bengaluru Urban",
+    state: "Karnataka",
+    pinCode: "560034",
+  });
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const [paymentChoice, setPaymentChoice] = useState<"RAZORPAY" | "COD">("RAZORPAY");
+  const [step, setStep] = useState<1 | 2>(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleInputChange = (field: string, value: string) => {
+    setAddress((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleProceedToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (couponCode.toUpperCase() === "BUYERA10") {
-      const disc = Math.round((subtotal * 10) / 100);
-      setDiscount(disc);
-      setCouponApplied(true);
-    } else {
-      alert("Invalid coupon code. Try BUYERA10");
+    if (!address.fullName || !address.phone || !address.pinCode || !address.houseFlat) {
+      setError("Please fill in all mandatory shipping address fields.");
+      return;
+    }
+    setError(null);
+    setStep(2);
+  };
+
+  const handlePlaceOrder = async () => {
+    if (items.length === 0) {
+      setError("Your shopping bag is empty.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (paymentChoice === "COD") {
+        // Cash on Delivery Flow
+        const res = await fetch("/api/checkout/cod/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items,
+            couponCode,
+            shippingAddress: address,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Failed to process Cash on Delivery order.");
+        }
+
+        clearCart();
+        router.push(`/account/orders/${data.orderId || data.orderNumber}`);
+        return;
+      }
+
+      // Online Razorpay Payment Flow
+      const res = await fetch("/api/checkout/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          couponCode,
+          shippingAddress: address,
+        }),
+      });
+
+      const orderData = await res.json();
+
+      if (!res.ok || !orderData.success) {
+        throw new Error(orderData.error || "Failed to initialize Razorpay order.");
+      }
+
+      const { data } = orderData;
+      const isLoaded = await loadRazorpayScript();
+
+      if (!isLoaded || !(window as any).Razorpay || data.key === "rzp_test_mock") {
+        // Fallback simulated payment when API keys are unpopulated
+        console.log("Proceeding with simulated online payment confirmation...");
+        const verifyRes = await fetch("/api/checkout/razorpay/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpayOrderId: data.razorpayOrderId,
+            razorpayPaymentId: `pay_mock_${Date.now()}`,
+            razorpaySignature: "mock_signature_dev",
+            orderData: {
+              ...data,
+              shippingAddress: address,
+              couponCode,
+            },
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+        if (verifyData.success) {
+          clearCart();
+          router.push(`/account/orders/${verifyData.orderId || data.orderNumber}`);
+          return;
+        } else {
+          throw new Error(verifyData.error || "Payment verification failed.");
+        }
+      }
+
+      // Launch Real Razorpay SDK
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: "BUYERA",
+        description: `Order ${data.orderNumber}`,
+        image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=200",
+        order_id: data.razorpayOrderId,
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await fetch("/api/checkout/razorpay/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                orderData: {
+                  ...data,
+                  shippingAddress: address,
+                  couponCode,
+                },
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              clearCart();
+              router.push(`/account/orders/${verifyData.orderId || data.orderNumber}`);
+            } else {
+              setError(verifyData.error || "Payment verification failed.");
+            }
+          } catch (err: any) {
+            setError(err.message || "Error verifying payment.");
+          }
+        },
+        prefill: {
+          name: address.fullName,
+          email: address.email || "customer@buyera.in",
+          contact: address.phone,
+        },
+        theme: {
+          color: "#121212",
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (err: any) {
+      setError(err.message || "An error occurred during checkout.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (items.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center max-w-md">
+        <h1 className="font-editorial-heading text-2xl text-charcoal mb-4">
+          Your Shopping Bag Is Empty
+        </h1>
+        <p className="text-xs text-charcoal/60 mb-6">
+          Add some luxury silhouettes before proceeding to checkout.
+        </p>
+        <Link href="/shop">
+          <Button variant="gold" size="md">
+            EXPLORE COLLECTIONS
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 lg:px-8 py-12">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto space-y-8">
         <Link
           href="/cart"
-          className="inline-flex items-center gap-1.5 text-xs text-charcoal/60 hover:text-charcoal mb-8"
+          className="inline-flex items-center gap-1.5 text-xs text-charcoal/60 hover:text-charcoal transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Back to shopping bag
+          Back to Shopping Bag
         </Link>
 
+        {error && (
+          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Shipping Details Form */}
+          {/* Main Checkout Steps */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Step 1: Shipping Address */}
             <div className="bg-white border border-canvas-border p-8 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-canvas-border pb-4">
-                <h2 className="font-editorial-heading text-xl text-charcoal">
-                  1. Shipping Information
-                </h2>
-                <span className="text-[10px] tracking-widest uppercase text-gold font-semibold">
-                  DELIVERY TO INDIA
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-full bg-charcoal text-white text-xs flex items-center justify-center font-bold">
+                    1
+                  </span>
+                  <h2 className="font-editorial-heading text-xl text-charcoal">
+                    Shipping & Delivery Destination
+                  </h2>
+                </div>
+                {step === 2 && (
+                  <button
+                    onClick={() => setStep(1)}
+                    className="text-xs text-gold-dark underline uppercase tracking-wider font-semibold"
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input label="Full Name" placeholder="Aisha Khan" required />
-                <Input label="Mobile Number" placeholder="+91 98765 43210" required />
-              </div>
+              {step === 1 ? (
+                <form onSubmit={handleProceedToPayment} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Full Name *"
+                      required
+                      value={address.fullName}
+                      onChange={(e) => handleInputChange("fullName", e.target.value)}
+                      placeholder="e.g. Aisha Khan"
+                    />
+                    <Input
+                      label="Mobile Number *"
+                      type="tel"
+                      required
+                      value={address.phone}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      placeholder="+91 98765 43210"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input label="Flat / House / Building" placeholder="Flat 402, Royal Palms" required />
-                <Input label="Street & Area" placeholder="80 Feet Road, Koramangala" required />
-              </div>
+                  <Input
+                    label="Email Address (for Order Receipt & Updates)"
+                    type="email"
+                    value={address.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="aisha@example.com"
+                  />
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Input label="City" placeholder="Bengaluru" required />
-                <Input label="State" placeholder="Karnataka" required />
-                <Input label="PIN Code" placeholder="560034" required />
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Flat / House / Building *"
+                      required
+                      value={address.houseFlat}
+                      onChange={(e) => handleInputChange("houseFlat", e.target.value)}
+                      placeholder="Flat 402, Royal Palms"
+                    />
+                    <Input
+                      label="Street Address *"
+                      required
+                      value={address.street}
+                      onChange={(e) => handleInputChange("street", e.target.value)}
+                      placeholder="80 Feet Road, 4th Block"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Input
+                      label="City *"
+                      required
+                      value={address.city}
+                      onChange={(e) => handleInputChange("city", e.target.value)}
+                      placeholder="Bengaluru"
+                    />
+                    <Input
+                      label="State *"
+                      required
+                      value={address.state}
+                      onChange={(e) => handleInputChange("state", e.target.value)}
+                      placeholder="Karnataka"
+                    />
+                    <Input
+                      label="PIN Code *"
+                      required
+                      value={address.pinCode}
+                      onChange={(e) => handleInputChange("pinCode", e.target.value)}
+                      placeholder="560034"
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <Button type="submit" variant="primary" size="md" className="w-full">
+                      CONTINUE TO PAYMENT SELECTION
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <div className="text-xs text-charcoal/80 space-y-1 bg-cream-50 p-4 border border-canvas-border">
+                  <p className="font-semibold text-charcoal">{address.fullName} ({address.phone})</p>
+                  <p>{address.houseFlat}, {address.street}</p>
+                  <p>{address.city}, {address.state} - {address.pinCode}</p>
+                </div>
+              )}
             </div>
 
-            {/* Payment Section */}
-            <div className="bg-white border border-canvas-border p-8 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-canvas-border pb-4">
-                <h2 className="font-editorial-heading text-xl text-charcoal">
-                  2. Payment Method
-                </h2>
-                <span className="text-[10px] tracking-widest uppercase text-emerald-600 font-semibold">
-                  RAZORPAY 256-BIT SECURE
+            {/* Step 2: Payment Method Selection */}
+            <div
+              className={`bg-white border border-canvas-border p-8 shadow-sm space-y-6 ${
+                step === 1 ? "opacity-60 pointer-events-none" : ""
+              }`}
+            >
+              <div className="flex items-center gap-3 border-b border-canvas-border pb-4">
+                <span className="w-6 h-6 rounded-full bg-charcoal text-white text-xs flex items-center justify-center font-bold">
+                  2
                 </span>
+                <h2 className="font-editorial-heading text-xl text-charcoal">
+                  Select Payment Gateway
+                </h2>
               </div>
 
-              <p className="text-xs text-charcoal/70 leading-relaxed">
-                You will be redirected to the secure Razorpay payment gateway to pay via UPI (Google Pay, PhonePe, Paytm), Credit/Debit Card, or Net Banking.
-              </p>
+              {/* Dual Payment Options */}
+              <div className="space-y-4">
+                {/* Option 1: Razorpay Online */}
+                <div
+                  onClick={() => setPaymentChoice("RAZORPAY")}
+                  className={`cursor-pointer p-5 border transition-all flex items-start justify-between ${
+                    paymentChoice === "RAZORPAY"
+                      ? "border-charcoal bg-cream-50/70 shadow-sm"
+                      : "border-canvas-border bg-white hover:border-gold/50"
+                  }`}
+                >
+                  <div className="flex items-start gap-3.5">
+                    <div
+                      className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 ${
+                        paymentChoice === "RAZORPAY"
+                          ? "border-charcoal bg-charcoal text-white"
+                          : "border-charcoal/40"
+                      }`}
+                    >
+                      {paymentChoice === "RAZORPAY" && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
 
-              <div className="p-4 bg-cream-100 border border-gold/30 flex items-center gap-3">
-                <Lock className="w-5 h-5 text-gold shrink-0" />
-                <p className="text-[11px] text-charcoal/80">
-                  Server-side cryptographic signature verification (HMAC SHA256) protects every transaction against tampering.
-                </p>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-gold-dark" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-charcoal">
+                          Pay Online via Razorpay
+                        </span>
+                        <span className="text-[9px] uppercase font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200">
+                          RECOMMENDED
+                        </span>
+                      </div>
+                      <p className="text-xs text-charcoal/60 font-light">
+                        Instant confirmation via UPI (Google Pay, PhonePe, Paytm), Debit/Credit Cards, or NetBanking.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Option 2: Cash on Delivery */}
+                <div
+                  onClick={() => setPaymentChoice("COD")}
+                  className={`cursor-pointer p-5 border transition-all flex items-start justify-between ${
+                    paymentChoice === "COD"
+                      ? "border-charcoal bg-cream-50/70 shadow-sm"
+                      : "border-canvas-border bg-white hover:border-gold/50"
+                  }`}
+                >
+                  <div className="flex items-start gap-3.5">
+                    <div
+                      className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 ${
+                        paymentChoice === "COD"
+                          ? "border-charcoal bg-charcoal text-white"
+                          : "border-charcoal/40"
+                      }`}
+                    >
+                      {paymentChoice === "COD" && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Banknote className="w-4 h-4 text-emerald-700" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-charcoal">
+                          Cash on Delivery (COD)
+                        </span>
+                      </div>
+                      <p className="text-xs text-charcoal/60 font-light">
+                        Pay with cash upon delivery at your doorstep. Please keep exact cash ready during delivery.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {step === 2 && (
+                <div className="pt-2">
+                  <Button
+                    onClick={handlePlaceOrder}
+                    variant={paymentChoice === "RAZORPAY" ? "gold" : "primary"}
+                    size="lg"
+                    isLoading={loading}
+                    className="w-full text-xs tracking-widest uppercase"
+                  >
+                    {paymentChoice === "RAZORPAY" ? (
+                      <>
+                        <Lock className="w-4 h-4 mr-2" />
+                        PAY {formatPrice(total)} WITH RAZORPAY
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        CONFIRM COD ORDER ({formatPrice(total)})
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Checkout Summary Box */}
+          {/* Sidebar Order Summary */}
           <div className="bg-white border border-canvas-border p-6 shadow-luxury space-y-6 self-start">
             <h2 className="font-editorial-heading text-lg text-charcoal border-b border-canvas-border pb-3">
-              Order Review
+              Order Review ({items.length} Items)
             </h2>
 
-            {/* Coupon Code Engine */}
-            <form onSubmit={handleApplyCoupon} className="space-y-2">
-              <label className="block text-xs uppercase tracking-wider text-charcoal/70 font-medium">
-                Promotional Code
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  placeholder="e.g. BUYERA10"
-                  className="flex-1 px-3 py-2 text-xs uppercase bg-canvas border border-canvas-border focus:outline-none focus:border-gold"
-                />
-                <Button type="submit" variant="primary" size="sm">
-                  APPLY
-                </Button>
-              </div>
-              {couponApplied && (
-                <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium pt-1">
-                  <Tag className="w-3.5 h-3.5" />
-                  Coupon applied: 10% discount
+            {/* Compact Item List */}
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+              {items.map((item) => (
+                <div key={item.id} className="flex gap-3 text-xs">
+                  <div className="relative w-12 h-14 bg-cream-100 shrink-0">
+                    <Image src={item.image} alt={item.name} fill className="object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-charcoal truncate">{item.name}</p>
+                    <p className="text-[10px] text-charcoal/50">Qty: {item.quantity} • {item.size}</p>
+                    <p className="font-semibold text-charcoal mt-1">{formatPrice(item.price * item.quantity)}</p>
+                  </div>
                 </div>
-              )}
-            </form>
+              ))}
+            </div>
 
-            <div className="space-y-3 text-xs text-charcoal/70 border-t border-canvas-border pt-4">
+            {/* Cost Breakdown */}
+            <div className="space-y-2.5 text-xs text-charcoal/70 border-t border-canvas-border pt-4">
               <div className="flex justify-between">
-                <span>Subtotal (2 items)</span>
+                <span>Subtotal</span>
                 <span className="font-medium text-charcoal">{formatPrice(subtotal)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-emerald-600">
-                  <span>Coupon Discount</span>
+                  <span>Coupon Discount ({couponCode})</span>
                   <span>-{formatPrice(discount)}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span>Express Shipping</span>
+                <span>Shipping</span>
                 <span className="font-medium text-charcoal">
                   {shipping === 0 ? "FREE" : formatPrice(shipping)}
                 </span>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-canvas-border flex justify-between items-baseline">
+            <div className="pt-3 border-t border-canvas-border flex justify-between items-baseline">
               <span className="text-sm font-semibold text-charcoal">Total Amount</span>
               <span className="text-xl font-bold text-charcoal">{formatPrice(total)}</span>
             </div>
 
-            <Button variant="gold" size="lg" className="w-full">
-              <Lock className="w-4 h-4 mr-1" />
-              PAY {formatPrice(total)} WITH RAZORPAY
-            </Button>
-
-            <div className="flex items-center justify-center gap-1.5 text-[10px] text-charcoal/50 uppercase tracking-wider">
+            <div className="pt-2 flex items-center justify-center gap-1.5 text-[10px] text-charcoal/60 uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5 text-gold" />
               100% Encrypted & Authenticated
             </div>
