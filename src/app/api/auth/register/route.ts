@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "An account with this email address already exists." },
+        { error: "An account with this email address already exists. Please sign in." },
         { status: 409 }
       );
     }
@@ -48,22 +48,28 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Account created successfully.",
+        message: "Account created successfully. Please sign in.",
         user,
       },
       { status: 201 }
     );
   } catch (error: any) {
+    console.error("User registration error:", error);
+
     if (error.name === "ZodError") {
+      const message = error.errors?.[0]?.message || "Validation failed";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+
+    if (error.code === "P2002") {
       return NextResponse.json(
-        { error: error.errors[0]?.message || "Validation failed" },
-        { status: 400 }
+        { error: "An account with this email address already exists." },
+        { status: 409 }
       );
     }
 
-    console.error("User registration error:", error);
     return NextResponse.json(
-      { error: "Internal server error occurred." },
+      { error: error.message || "Failed to create account. Please try again." },
       { status: 500 }
     );
   }
