@@ -116,7 +116,19 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
+      orderId: razorpayOrderId,
+      amount: amountInPaise,
+      currency: "INR",
+      key: razorpayKey,
+      orderNumber: receipt,
+      subtotal: calculatedSubtotal,
+      discount,
+      shippingCost,
+      total: totalAmount,
+      items: validatedItems,
+      shippingAddress,
       data: {
+        orderId: razorpayOrderId,
         razorpayOrderId,
         amount: amountInPaise,
         currency: "INR",

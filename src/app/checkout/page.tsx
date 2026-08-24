@@ -15,7 +15,6 @@ import {
   Banknote,
   Check,
   MapPin,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -23,24 +22,11 @@ import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 import { Logo } from "@/components/ui/Logo";
 
-// Helper to dynamically load Razorpay script
-function loadRazorpayScript(): Promise<boolean> {
+// 1. Dynamic Script Injection Helper
+const loadRazorpayScript = () => {
   return new Promise((resolve) => {
-    if (typeof window === "undefined") {
-      resolve(false);
-      return;
-    }
-    if ((window as any).Razorpay) {
-      resolve(true);
-      return;
-    }
-    const existingScript = document.querySelector(
-      'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
-    );
-    if (existingScript) {
-      existingScript.addEventListener("load", () => resolve(true));
-      existingScript.addEventListener("error", () => resolve(false));
-      return;
+    if (typeof window !== "undefined" && (window as any).Razorpay) {
+      return resolve(true);
     }
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -49,7 +35,7 @@ function loadRazorpayScript(): Promise<boolean> {
     script.onerror = () => resolve(false);
     document.body.appendChild(script);
   });
-}
+};
 
 interface SavedAddress {
   id: string;
@@ -92,11 +78,9 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Pre-load Razorpay script on mount
+  // Preload script on mount
   useEffect(() => {
-    loadRazorpayScript().catch((err) =>
-      console.warn("Preloading Razorpay script failed:", err)
-    );
+    loadRazorpayScript();
   }, []);
 
   // Fetch saved user addresses if authenticated
@@ -176,6 +160,7 @@ export default function CheckoutPage() {
     setStep(2);
   };
 
+  // 2. Robust Checkout Handler
   const handlePlaceOrder = async () => {
     if (items.length === 0) {
       setError("Your shopping bag is empty.");
@@ -206,11 +191,18 @@ export default function CheckoutPage() {
         }
 
         clearCart();
-        router.push(`/account/orders/${data.orderId || data.orderNumber}`);
+        window.location.href = `/account/orders/${data.orderId || data.orderNumber}`;
         return;
       }
 
       // Online Razorpay Payment Flow
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        alert("Failed to load Razorpay SDK. Please check your internet connection.");
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch("/api/checkout/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -224,101 +216,89 @@ export default function CheckoutPage() {
       const orderData = await res.json();
 
       if (!res.ok || !orderData.success) {
-        throw new Error(
-          orderData.error || "Failed to initialize Razorpay payment order."
-        );
+        const errorMsg = orderData.error || "Failed to initialize Razorpay order.";
+        alert(errorMsg);
+        setError(errorMsg);
+        setLoading(false);
+        return;
       }
 
-      const { data } = orderData;
-      const isLoaded = await loadRazorpayScript();
+      const { orderId, amount, currency, key, orderNumber } = orderData;
 
-      if (!isLoaded || !(window as any).Razorpay) {
-        throw new Error(
-          "Payment gateway script failed to load. Please disable any ad-blockers and try again."
-        );
-      }
-
-      // Configure Razorpay Options
-      const options: any = {
-        key:
-          data.key ||
-          process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-          "rzp_live_TTYXQgDrOD0xtU",
-        amount: data.amount,
-        currency: data.currency || "INR",
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || key,
+        amount: amount, // in paise
+        currency: currency || "INR",
         name: "BUYERA",
-        description: `Order ${data.orderNumber}`,
+        description: `Modest Fashion Purchase - Order #${orderNumber || ""}`,
         image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=200",
+        order_id: orderId,
         handler: async function (response: any) {
           try {
             setLoading(true);
-            const verifyRes = await fetch(
-              "/api/checkout/razorpay/verify-payment",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  razorpayOrderId: response.razorpay_order_id || data.razorpayOrderId,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature,
-                  orderData: {
-                    ...data,
-                    shippingAddress: address,
-                    couponCode,
-                  },
-                }),
-              }
-            );
+            const verifyRes = await fetch("/api/checkout/razorpay/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                orderData: {
+                  orderNumber,
+                  items,
+                  subtotal,
+                  discount,
+                  shippingCost: shipping,
+                  total,
+                  couponCode,
+                  shippingAddress: address,
+                },
+              }),
+            });
 
             const verifyData = await verifyRes.json();
-            if (verifyData.success) {
+            if (verifyRes.ok && verifyData.success !== false) {
               clearCart();
-              router.push(
-                `/account/orders/${verifyData.orderId || data.orderNumber}`
-              );
+              window.location.href = `/account/orders/${verifyData.orderId || verifyData.orderNumber || ""}`;
             } else {
-              setError(verifyData.error || "Payment verification failed.");
+              const errMsg = verifyData.error || "Payment verification failed";
+              alert(errMsg);
+              setError(errMsg);
               setLoading(false);
             }
           } catch (err: any) {
-            setError(err.message || "Error verifying payment.");
+            const errMsg = err.message || "Error verifying payment.";
+            alert(errMsg);
+            setError(errMsg);
             setLoading(false);
           }
         },
+        prefill: {
+          name: address.fullName || session?.user?.name || "",
+          email: address.email || session?.user?.email || "",
+          contact: address.phone || "",
+        },
+        theme: { color: "#121212" },
         modal: {
           ondismiss: function () {
             setLoading(false);
           },
         },
-        prefill: {
-          name: address.fullName,
-          email: address.email || session?.user?.email || "customer@buyera.in",
-          contact: address.phone,
-        },
-        theme: {
-          color: "#121212",
-        },
       };
 
-      // Only pass order_id if it's a valid Razorpay order ID (starts with order_)
-      if (data.razorpayOrderId && typeof data.razorpayOrderId === "string" && data.razorpayOrderId.startsWith("order_")) {
-        options.order_id = data.razorpayOrderId;
-      }
+      const paymentObject = new (window as any).Razorpay(options);
 
-      const rzp = new (window as any).Razorpay(options);
-
-      rzp.on("payment.failed", function (response: any) {
-        setError(
-          response.error?.description ||
-            "Payment failed or declined by your bank. Please try another card or UPI option."
-        );
+      paymentObject.on("payment.failed", function (resp: any) {
+        alert(resp?.error?.description || "Payment Failed");
         setLoading(false);
       });
 
-      rzp.open();
+      paymentObject.open();
     } catch (err: any) {
       console.error("Checkout payment error:", err);
-      setError(err.message || "An unexpected error occurred during checkout.");
+      const errMsg = err.message || "An unexpected error occurred during checkout.";
+      alert(errMsg);
+      setError(errMsg);
       setLoading(false);
     }
   };
