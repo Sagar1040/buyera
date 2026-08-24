@@ -15,7 +15,6 @@ import {
   Banknote,
   Check,
   MapPin,
-  Plus,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -74,8 +73,8 @@ export default function CheckoutPage() {
 
   // Form State
   const [address, setAddress] = useState({
-    fullName: session?.user?.name || "",
-    email: session?.user?.email || "",
+    fullName: "",
+    email: "",
     phone: "",
     houseFlat: "",
     street: "",
@@ -162,15 +161,15 @@ export default function CheckoutPage() {
   const handleProceedToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (
-      !address.fullName ||
-      !address.phone ||
-      !address.pinCode ||
-      !address.houseFlat ||
-      !address.street ||
-      !address.city ||
-      !address.state
+      !address.fullName.trim() ||
+      !address.phone.trim() ||
+      !address.pinCode.trim() ||
+      !address.houseFlat.trim() ||
+      !address.street.trim() ||
+      !address.city.trim() ||
+      !address.state.trim()
     ) {
-      setError("Please fill in all mandatory shipping address fields.");
+      setError("Please fill in all mandatory shipping address fields marked with *.");
       return;
     }
     setError(null);
@@ -226,7 +225,7 @@ export default function CheckoutPage() {
 
       if (!res.ok || !orderData.success) {
         throw new Error(
-          orderData.error || "Failed to initialize Razorpay order."
+          orderData.error || "Failed to initialize Razorpay payment order."
         );
       }
 
@@ -234,44 +233,22 @@ export default function CheckoutPage() {
       const isLoaded = await loadRazorpayScript();
 
       if (!isLoaded || !(window as any).Razorpay) {
-        // Fallback verification if script blocked by ad-blocker
-        console.warn("Razorpay script not available, attempting verification fallback...");
-        const verifyRes = await fetch("/api/checkout/razorpay/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            razorpayOrderId: data.razorpayOrderId,
-            razorpayPaymentId: `pay_direct_${Date.now()}`,
-            razorpaySignature: "live_signature",
-            orderData: {
-              ...data,
-              shippingAddress: address,
-              couponCode,
-            },
-          }),
-        });
-
-        const verifyData = await verifyRes.json();
-        if (verifyData.success) {
-          clearCart();
-          router.push(
-            `/account/orders/${verifyData.orderId || data.orderNumber}`
-          );
-          return;
-        } else {
-          throw new Error(verifyData.error || "Payment verification failed.");
-        }
+        throw new Error(
+          "Payment gateway script failed to load. Please disable any ad-blockers and try again."
+        );
       }
 
-      // Launch Real Razorpay SDK
-      const options = {
-        key: data.key,
+      // Configure Razorpay Options
+      const options: any = {
+        key:
+          data.key ||
+          process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+          "rzp_live_TTYXQgDrOD0xtU",
         amount: data.amount,
         currency: data.currency || "INR",
         name: "BUYERA",
         description: `Order ${data.orderNumber}`,
         image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=200",
-        order_id: data.razorpayOrderId,
         handler: async function (response: any) {
           try {
             setLoading(true);
@@ -281,7 +258,7 @@ export default function CheckoutPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayOrderId: response.razorpay_order_id || data.razorpayOrderId,
                   razorpayPaymentId: response.razorpay_payment_id,
                   razorpaySignature: response.razorpay_signature,
                   orderData: {
@@ -323,17 +300,25 @@ export default function CheckoutPage() {
         },
       };
 
+      // Only pass order_id if it's a valid Razorpay order ID (starts with order_)
+      if (data.razorpayOrderId && typeof data.razorpayOrderId === "string" && data.razorpayOrderId.startsWith("order_")) {
+        options.order_id = data.razorpayOrderId;
+      }
+
       const rzp = new (window as any).Razorpay(options);
+
       rzp.on("payment.failed", function (response: any) {
         setError(
           response.error?.description ||
-            "Payment transaction failed. Please try again or choose another method."
+            "Payment failed or declined by your bank. Please try another card or UPI option."
         );
         setLoading(false);
       });
+
       rzp.open();
     } catch (err: any) {
-      setError(err.message || "An error occurred during checkout.");
+      console.error("Checkout payment error:", err);
+      setError(err.message || "An unexpected error occurred during checkout.");
       setLoading(false);
     }
   };
@@ -398,7 +383,7 @@ export default function CheckoutPage() {
                     onClick={() => setStep(1)}
                     className="text-xs text-gold-dark underline uppercase tracking-wider font-semibold"
                   >
-                    Edit
+                    Edit Address
                   </button>
                 )}
               </div>
@@ -472,7 +457,7 @@ export default function CheckoutPage() {
                     </div>
 
                     <Input
-                      label="Email Address (for Order Receipt & Updates)"
+                      label="Email Address (for Order Receipt & Tracking)"
                       type="email"
                       value={address.email}
                       onChange={(e) =>
