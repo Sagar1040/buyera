@@ -9,7 +9,12 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    let session = null;
+    try {
+      session = await getServerSession(authOptions);
+    } catch (authErr) {
+      console.warn("Session lookup skipped during payment verification:", authErr);
+    }
     const body = await req.json();
 
     const razorpayOrderId = body.razorpay_order_id || body.razorpayOrderId;

@@ -9,7 +9,12 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    let session = null;
+    try {
+      session = await getServerSession(authOptions);
+    } catch (authErr) {
+      console.warn("Session lookup skipped during guest COD checkout:", authErr);
+    }
     const body = await req.json();
     const { items, couponCode, shippingAddress } = body;
 

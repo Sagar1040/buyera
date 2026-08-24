@@ -9,7 +9,9 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret:
+    process.env.NEXTAUTH_SECRET ||
+    "buyera_jwt_super_secure_production_secret_32_characters_2026",
   pages: {
     signIn: "/login",
     error: "/login",
