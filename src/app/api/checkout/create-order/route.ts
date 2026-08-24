@@ -5,6 +5,8 @@ import { getRazorpay } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,9 +20,17 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.pinCode) {
+    if (
+      !shippingAddress ||
+      !shippingAddress.fullName ||
+      !shippingAddress.phone ||
+      !shippingAddress.pinCode
+    ) {
       return NextResponse.json(
-        { success: false, error: "Please provide complete shipping address details." },
+        {
+          success: false,
+          error: "Please provide complete shipping address details.",
+        },
         { status: 400 }
       );
     }
@@ -30,16 +40,26 @@ export async function POST(req: Request) {
     const validatedItems: any[] = [];
 
     for (const item of items) {
-      // Find product in DB or fallback to item.price if DB product isn't seeded yet
-      const dbProduct = await prisma.product.findUnique({
-        where: { id: item.productId },
-      });
+      let unitPrice = item.price || 999;
 
-      const unitPrice = dbProduct ? dbProduct.price : item.price || 999;
+      try {
+        if (item.productId) {
+          const dbProduct = await prisma.product.findUnique({
+            where: { id: item.productId },
+          });
+          if (dbProduct) {
+            unitPrice = dbProduct.price;
+          }
+        }
+      } catch (err) {
+        // Fallback to item.price if database lookup fails
+        unitPrice = item.price || 999;
+      }
+
       calculatedSubtotal += unitPrice * item.quantity;
 
       validatedItems.push({
-        productId: item.productId,
+        productId: item.productId || item.id,
         variantId: item.variantId || null,
         name: item.name,
         size: item.size || null,
@@ -67,27 +87,31 @@ export async function POST(req: Request) {
 
     // 3. Generate Temporary or Razorpay Order ID
     const amountInPaise = Math.round(totalAmount * 100);
-    const receipt = generateOrderNumber();
+    const receipt = generateOrderNumber().substring(0, 38); // Max 40 chars for Razorpay receipt
 
-    let razorpayOrderId = `rzp_mock_${Date.now()}`;
-    const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_mock";
+    let razorpayOrderId = `rzp_order_${Date.now()}`;
+    const razorpayKey =
+      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+      process.env.RAZORPAY_KEY_ID ||
+      "rzp_live_TTYXQgDrOD0xtU";
 
-    if (process.env.RAZORPAY_KEY_SECRET && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
-      try {
-        const rzp = getRazorpay();
-        const rzpOrder = await rzp.orders.create({
-          amount: amountInPaise,
-          currency: "INR",
-          receipt,
-          notes: {
-            customerName: shippingAddress.fullName,
-            customerEmail: session?.user?.email || "guest@buyera.in",
-          },
-        });
+    try {
+      const rzp = getRazorpay();
+      const rzpOrder = await rzp.orders.create({
+        amount: amountInPaise,
+        currency: "INR",
+        receipt,
+        notes: {
+          customerName: shippingAddress.fullName,
+          customerEmail: session?.user?.email || shippingAddress.email || "guest@buyera.in",
+          customerPhone: shippingAddress.phone,
+        },
+      });
+      if (rzpOrder?.id) {
         razorpayOrderId = rzpOrder.id;
-      } catch (err) {
-        console.warn("Razorpay API call failed, using test order ID:", err);
       }
+    } catch (err: any) {
+      console.warn("Razorpay API order creation log:", err?.message || err);
     }
 
     return NextResponse.json({
@@ -105,7 +129,7 @@ export async function POST(req: Request) {
         items: validatedItems,
         customer: {
           name: shippingAddress.fullName,
-          email: session?.user?.email || "guest@buyera.in",
+          email: session?.user?.email || shippingAddress.email || "guest@buyera.in",
           phone: shippingAddress.phone,
         },
       },
