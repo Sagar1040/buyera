@@ -4,7 +4,7 @@ import "./globals.css";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { AppProviders } from "@/components/providers/AppProviders";
+import { Providers } from "@/components/Providers";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -58,12 +58,12 @@ export default function RootLayout({
       className={`${playfair.variable} ${cinzel.variable} ${jakarta.variable}`}
     >
       <body className="min-h-screen flex flex-col bg-canvas text-charcoal selection:bg-gold selection:text-white">
-        <AppProviders>
+        <Providers>
           <AnnouncementBar />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
-        </AppProviders>
+        </Providers>
       </body>
     </html>
   );

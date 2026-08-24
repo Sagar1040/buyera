@@ -349,37 +349,24 @@ export function Navbar() {
             {/* User Account Flyout */}
             <div className="relative" ref={dropdownRef}>
               {status === "authenticated" && session?.user ? (
-                <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-1.5 p-1 border border-canvas-border hover:border-gold text-charcoal transition-colors bg-cream-50"
-                  aria-label="User Account Menu"
-                >
-                  <div className="w-6 h-6 rounded-full bg-charcoal text-white text-[10px] font-bold flex items-center justify-center uppercase">
-                    {session.user.name?.charAt(0) || "U"}
-                  </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-charcoal/60" />
-                </button>
-              ) : (
-                <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="p-2 text-charcoal hover:text-gold transition-colors flex items-center gap-1"
-                  aria-label="Account Login"
-                >
-                  <User className="w-5 h-5" />
-                  <span className="hidden sm:inline text-xs uppercase tracking-wider font-medium text-charcoal/70">
-                    Sign In
-                  </span>
-                </button>
-              )}
+                <>
+                  <button
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className="flex items-center gap-1.5 p-1 border border-canvas-border hover:border-gold text-charcoal transition-colors bg-cream-50"
+                    aria-label="User Account Menu"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-charcoal text-white text-[10px] font-bold flex items-center justify-center uppercase">
+                      {session.user.name?.charAt(0) || "U"}
+                    </div>
+                    <ChevronDown className="w-3.5 h-3.5 text-charcoal/60" />
+                  </button>
 
-              {/* Flyout Menu */}
-              {userDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-60 bg-white border border-canvas-border shadow-luxury py-2 z-50 animate-fadeIn">
-                  {status === "authenticated" && session?.user ? (
-                    <>
+                  {/* Flyout Menu */}
+                  {userDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-60 bg-white border border-canvas-border shadow-luxury py-2 z-50 animate-fadeIn">
                       <div className="px-4 py-3 border-b border-canvas-border">
                         <p className="text-xs font-semibold text-charcoal truncate">
-                          {session.user.name}
+                          {session.user.name || "Member"}
                         </p>
                         <p className="text-[11px] text-charcoal/50 truncate font-mono">
                           {session.user.email}
@@ -387,12 +374,21 @@ export function Navbar() {
                       </div>
 
                       <Link
-                        href="/account"
+                        href="/account/orders"
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-charcoal hover:bg-cream-50 hover:text-gold transition-colors"
                       >
                         <Package className="w-4 h-4 text-gold-dark" />
-                        My Orders & Live Tracking
+                        My Orders
+                      </Link>
+
+                      <Link
+                        href="/account"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-charcoal hover:bg-cream-50 hover:text-gold transition-colors"
+                      >
+                        <User className="w-4 h-4 text-gold-dark" />
+                        Profile Settings
                       </Link>
 
                       {session.user.role === "ADMIN" && (
@@ -415,31 +411,20 @@ export function Navbar() {
                         <LogOut className="w-4 h-4" />
                         Sign Out
                       </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="px-4 py-2 text-[10px] uppercase tracking-widest text-charcoal/50 font-semibold">
-                        Welcome to BUYERA
-                      </div>
-                      <Link
-                        href="/login"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center justify-between px-4 py-2.5 text-xs font-medium text-charcoal hover:bg-cream-50 hover:text-gold transition-colors"
-                      >
-                        <span>Sign In</span>
-                        <span className="text-[10px] text-gold uppercase tracking-wider font-semibold">Members</span>
-                      </Link>
-                      <Link
-                        href="/register"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center justify-between px-4 py-2.5 text-xs text-charcoal/80 hover:bg-cream-50 hover:text-gold transition-colors"
-                      >
-                        <span>Create Account</span>
-                        <span className="text-[10px] text-charcoal/40 uppercase tracking-wider">Join Privé</span>
-                      </Link>
-                    </>
+                    </div>
                   )}
-                </div>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="p-2 text-charcoal hover:text-gold transition-colors flex items-center gap-1.5"
+                  aria-label="Account Login"
+                >
+                  <User className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs uppercase tracking-wider font-medium text-charcoal/70">
+                    Sign In / Register
+                  </span>
+                </Link>
               )}
             </div>
           </div>
@@ -612,16 +597,36 @@ export function Navbar() {
           <div className="pt-2 space-y-2">
             {status === "authenticated" && session?.user ? (
               <>
+                <div className="border-b border-canvas-border pb-2 mb-2">
+                  <p className="text-xs font-semibold text-charcoal">{session.user.name || "Member"}</p>
+                  <p className="text-[11px] text-charcoal/50 font-mono">{session.user.email}</p>
+                </div>
+                <Link
+                  href="/account/orders"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-xs uppercase tracking-widest text-charcoal hover:text-gold font-medium py-1"
+                >
+                  My Orders
+                </Link>
                 <Link
                   href="/account"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-xs uppercase tracking-widest text-gold-dark font-semibold py-1"
+                  className="block text-xs uppercase tracking-widest text-charcoal hover:text-gold font-medium py-1"
                 >
-                  My Account ({session.user.name})
+                  Profile Settings
                 </Link>
+                {session.user.role === "ADMIN" && (
+                  <Link
+                    href="/admin/orders"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block text-xs uppercase tracking-widest text-gold-dark font-medium py-1"
+                  >
+                    Admin Orders Portal
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
-                  className="block text-xs uppercase tracking-widest text-rose-600 font-semibold py-1"
+                  className="block text-xs uppercase tracking-widest text-rose-600 font-semibold py-1 text-left"
                 >
                   Sign Out
                 </button>
@@ -633,7 +638,7 @@ export function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-xs uppercase tracking-widest text-charcoal font-semibold"
                 >
-                  Sign In
+                  Sign In / Register
                 </Link>
                 <Link
                   href="/register"
