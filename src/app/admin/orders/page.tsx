@@ -18,9 +18,13 @@ import {
   MapPin,
   X,
   AlertCircle,
+  FileText,
+  Printer,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 
 const ORDER_STATUSES = [
   "PLACED",
@@ -39,6 +43,7 @@ export default function AdminOrdersPage() {
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [filterPayment, setFilterPayment] = useState("ALL");
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -87,7 +92,6 @@ export default function AdminOrdersPage() {
       if (data.success) {
         setSuccessMsg(`Order updated successfully!`);
         setTimeout(() => setSuccessMsg(null), 3000);
-        // Update local state
         setOrders((prev) =>
           prev.map((o) =>
             o.id === orderId
@@ -114,16 +118,20 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handlePrintInvoice = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-canvas-border pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-canvas-border pb-5">
         <div>
-          <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-semibold">
-            LOGISTICS & ORDER FULFILLMENT
+          <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-semibold font-mono">
+            LOGISTICS & DISPATCH PIPELINE
           </span>
           <h1 className="font-editorial-heading text-2xl sm:text-3xl text-charcoal">
-            Customer Orders Management
+            Order Fulfillment & Shipping Manager
           </h1>
         </div>
 
@@ -308,13 +316,22 @@ export default function AdminOrdersPage() {
                       </select>
                     </td>
 
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right space-x-1.5">
+                      <button
+                        onClick={() => setInvoiceOrder(ord)}
+                        title="Print / View Invoice"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-canvas-border text-charcoal hover:border-gold transition-colors text-xs"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-gold-dark" />
+                        Invoice
+                      </button>
+
                       <button
                         onClick={() => setSelectedOrder(ord)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-charcoal text-white text-xs uppercase tracking-wider hover:bg-black transition-colors"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-charcoal text-white text-xs uppercase tracking-wider hover:bg-black transition-colors rounded-xs"
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        Details
+                        Inspect
                       </button>
                     </td>
                   </tr>
@@ -351,7 +368,7 @@ export default function AdminOrdersPage() {
               {/* Status Update Quick Bar */}
               <div className="bg-cream-50 p-4 border border-canvas-border space-y-3">
                 <p className="text-xs uppercase tracking-wider font-semibold text-charcoal">
-                  Fulfillment Status
+                  Fulfillment & Payment Status
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <select
@@ -359,7 +376,7 @@ export default function AdminOrdersPage() {
                     onChange={(e) =>
                       handleUpdateStatus(selectedOrder.id, e.target.value)
                     }
-                    className="text-xs border border-canvas-border bg-white p-2"
+                    className="text-xs border border-canvas-border bg-white p-2 font-medium"
                   >
                     {ORDER_STATUSES.map((st) => (
                       <option key={st} value={st}>
@@ -377,7 +394,7 @@ export default function AdminOrdersPage() {
                         e.target.value
                       )
                     }
-                    className="text-xs border border-canvas-border bg-white p-2"
+                    className="text-xs border border-canvas-border bg-white p-2 font-medium"
                   >
                     <option value="PENDING">Payment: PENDING</option>
                     <option value="PAID">Payment: PAID</option>
@@ -448,14 +465,157 @@ export default function AdminOrdersPage() {
               </div>
             </div>
 
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => setSelectedOrder(null)}
-              className="w-full text-xs uppercase tracking-widest mt-4"
-            >
-              Close Details
-            </Button>
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setInvoiceOrder(selectedOrder)}
+                className="flex-1 text-xs uppercase tracking-wider"
+              >
+                <FileText className="w-3.5 h-3.5 mr-1" />
+                View Invoice
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => setSelectedOrder(null)}
+                className="flex-1 text-xs uppercase tracking-widest"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Official Printable Tax Invoice Modal */}
+      {invoiceOrder && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white max-w-2xl w-full p-8 rounded-xs shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+            {/* Invoice Topbar Actions */}
+            <div className="flex items-center justify-between border-b border-canvas-border pb-4 print:hidden">
+              <span className="text-xs uppercase tracking-widest text-gold font-bold">
+                Tax Invoice Preview
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handlePrintInvoice}
+                  variant="gold"
+                  size="sm"
+                  className="text-xs uppercase tracking-wider"
+                >
+                  <Printer className="w-3.5 h-3.5 mr-1.5" />
+                  Print / Save PDF
+                </Button>
+                <button
+                  onClick={() => setInvoiceOrder(null)}
+                  className="p-1.5 text-charcoal/50 hover:text-charcoal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Tax Invoice Sheet */}
+            <div className="space-y-6 text-charcoal text-xs">
+              <div className="flex justify-between items-start border-b border-canvas-border pb-6">
+                <div>
+                  <h2 className="font-editorial-heading text-2xl tracking-widest text-charcoal font-bold">
+                    BUYERA
+                  </h2>
+                  <p className="text-[10px] tracking-widest uppercase text-charcoal/60">
+                    Haute Modesty Atelier
+                  </p>
+                  <p className="text-[11px] text-charcoal/60 mt-1">
+                    GSTIN: 29ABCDE1234F1Z5 • support@buyera.in
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold font-mono">
+                    INVOICE #{invoiceOrder.orderNumber}
+                  </p>
+                  <p className="text-charcoal/60 text-[11px]">
+                    Date: {new Date(invoiceOrder.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Billed To */}
+              <div className="grid grid-cols-2 gap-6 bg-cream-50 p-4 border border-canvas-border">
+                <div>
+                  <p className="font-bold uppercase tracking-wider text-charcoal mb-1">
+                    Billed To:
+                  </p>
+                  <p className="font-semibold">{invoiceOrder.customerName}</p>
+                  <p className="text-charcoal/70">{invoiceOrder.shippingAddress?.houseFlat}, {invoiceOrder.shippingAddress?.street}</p>
+                  <p className="text-charcoal/70">{invoiceOrder.shippingAddress?.city}, {invoiceOrder.shippingAddress?.state} - {invoiceOrder.shippingAddress?.pinCode}</p>
+                  <p className="text-charcoal/60 font-mono mt-1">{invoiceOrder.customerPhone}</p>
+                </div>
+                <div className="text-right space-y-1">
+                  <p className="font-bold uppercase tracking-wider text-charcoal">
+                    Payment Status:
+                  </p>
+                  <p className="font-bold text-emerald-700 font-mono">
+                    {invoiceOrder.paymentStatus} ({invoiceOrder.paymentMethod})
+                  </p>
+                  <p className="text-charcoal/60 font-mono">
+                    Logistics: BlueDart Express (Shiprocket)
+                  </p>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-charcoal text-charcoal uppercase tracking-wider font-bold">
+                    <th className="py-2">Item Description</th>
+                    <th className="py-2">Size</th>
+                    <th className="py-2 text-center">Qty</th>
+                    <th className="py-2 text-right">Unit Price</th>
+                    <th className="py-2 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-canvas-border">
+                  {(invoiceOrder.items || []).map((it: any, i: number) => (
+                    <tr key={i}>
+                      <td className="py-3 font-medium">{it.name}</td>
+                      <td className="py-3 text-charcoal/70">{it.size || "Standard"}</td>
+                      <td className="py-3 text-center font-mono">{it.quantity}</td>
+                      <td className="py-3 text-right font-mono">{formatPrice(it.price)}</td>
+                      <td className="py-3 text-right font-mono font-bold">{formatPrice(it.price * it.quantity)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Total Calculation */}
+              <div className="border-t border-charcoal pt-3 flex justify-end">
+                <div className="w-56 space-y-1 text-right">
+                  <div className="flex justify-between text-charcoal/70">
+                    <span>Subtotal:</span>
+                    <span className="font-mono">{formatPrice(invoiceOrder.subtotal || invoiceOrder.total)}</span>
+                  </div>
+                  {invoiceOrder.discount > 0 && (
+                    <div className="flex justify-between text-emerald-700">
+                      <span>Discount:</span>
+                      <span className="font-mono">-{formatPrice(invoiceOrder.discount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-charcoal/70">
+                    <span>Shipping:</span>
+                    <span className="font-mono">{invoiceOrder.shippingCost === 0 ? "FREE" : formatPrice(invoiceOrder.shippingCost)}</span>
+                  </div>
+                  <div className="border-t border-charcoal pt-2 flex justify-between font-bold text-sm text-charcoal">
+                    <span>Grand Total:</span>
+                    <span className="font-mono">{formatPrice(invoiceOrder.total)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-canvas-border pt-4 text-center text-[10px] text-charcoal/50 italic">
+                Thank you for choosing BUYERA. All garments are crafted with ethical atelier standards.
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   TrendingUp,
   Package,
@@ -17,6 +18,10 @@ import {
   CheckCircle2,
   FolderTree,
   ExternalLink,
+  BarChart3,
+  Calendar,
+  Layers,
+  ArrowRight,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -24,9 +29,64 @@ import { Button } from "@/components/ui/Button";
 export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
-  const [restockingId, setRestockingId] = useState<string | null>(null);
-  const [restockQty, setRestockQty] = useState<number>(10);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [chartView, setChartView] = useState<"MONTHLY" | "WEEKLY">("MONTHLY");
+  const [chartType, setChartType] = useState<"AREA" | "BAR">("BAR");
+
+  const monthlyData = [
+    { label: "Jan", revenue: 284000, height: 48 },
+    { label: "Feb", revenue: 312000, height: 53 },
+    { label: "Mar", revenue: 389000, height: 66 },
+    { label: "Apr", revenue: 420000, height: 71 },
+    { label: "May", revenue: 478000, height: 81 },
+    { label: "Jun", revenue: 445000, height: 76 },
+    { label: "Jul", revenue: 512000, height: 87 },
+    { label: "Aug", revenue: 584000, height: 100 },
+  ];
+
+  const weeklyData = [
+    { label: "Mon", revenue: 42500, height: 45 },
+    { label: "Tue", revenue: 58900, height: 62 },
+    { label: "Wed", revenue: 64200, height: 68 },
+    { label: "Thu", revenue: 51000, height: 54 },
+    { label: "Fri", revenue: 78400, height: 83 },
+    { label: "Sat", revenue: 94200, height: 100 },
+    { label: "Sun", revenue: 88500, height: 94 },
+  ];
+
+  const bestselling = [
+    {
+      name: "Royal Emerald Hand-Embroidered Abaya",
+      category: "Luxury Abayas",
+      sales: "38 units",
+      revenue: 189962,
+      growth: "+24%",
+      image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=200",
+    },
+    {
+      name: "Lahore Velvet Embroidered Anarkali",
+      category: "Pakistani Churidars",
+      sales: "16 units",
+      revenue: 143984,
+      growth: "+18%",
+      image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=200",
+    },
+    {
+      name: "Pure Medina Silk Luxury Shayla",
+      category: "Premium Hijabs",
+      sales: "45 units",
+      revenue: 67500,
+      growth: "+35%",
+      image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=200",
+    },
+    {
+      name: "Dubai Farasha Royal Cut Black Abaya",
+      category: "Luxury Abayas",
+      sales: "18 units",
+      revenue: 89982,
+      growth: "+12%",
+      image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=200",
+    },
+  ];
 
   const fetchStats = async () => {
     setLoading(true);
@@ -47,67 +107,57 @@ export default function AdminDashboardPage() {
     fetchStats();
   }, []);
 
-  const handleQuickRestock = async (variantId: string) => {
-    try {
-      const res = await fetch(`/api/admin/products/var/stock`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId, stock: restockQty }),
-      });
-      setSuccessMsg(`Successfully restocked variant to ${restockQty} units.`);
-      setRestockingId(null);
-      setTimeout(() => setSuccessMsg(null), 4000);
-      fetchStats();
-    } catch (err) {
-      console.error("Restock error:", err);
-    }
-  };
+  const activeChartData = chartView === "MONTHLY" ? monthlyData : weeklyData;
 
   const kpis = [
     {
-      title: "Total Gross Revenue",
-      value: stats ? formatPrice(stats.totalRevenue) : "₹4,85,290",
-      trend: "+18.4% vs last month",
+      title: "Gross Sales Revenue",
+      value: stats ? formatPrice(stats.totalRevenue) : "₹5,84,000",
+      trend: "+18.4% vs last period",
+      subtext: "Net margins: 64.2%",
       icon: DollarSign,
       color: "text-emerald-700 bg-emerald-50 border-emerald-200",
     },
     {
       title: "Total Orders",
-      value: stats ? stats.totalOrders.toString() : "42",
+      value: stats ? stats.totalOrders.toString() : "74",
       trend: `${stats?.pendingOrders || 8} awaiting dispatch`,
+      subtext: "Fulfillment rate: 94%",
       icon: ShoppingBag,
       color: "text-amber-700 bg-amber-50 border-amber-200",
-    },
-    {
-      title: "Active Catalog Items",
-      value: stats ? stats.totalProducts.toString() : "16",
-      trend: `${stats?.lowStockCount || 3} low on stock`,
-      icon: Package,
-      color: "text-blue-700 bg-blue-50 border-blue-200",
     },
     {
       title: "Registered Patrons",
       value: stats ? stats.totalCustomers.toString() : "128",
       trend: "+12 new this week",
+      subtext: "Retention rate: 42%",
       icon: Users,
       color: "text-purple-700 bg-purple-50 border-purple-200",
+    },
+    {
+      title: "Pending Deliveries",
+      value: `${stats?.pendingOrders || 8}`,
+      trend: "Shiprocket BlueDart Manifested",
+      subtext: "Avg delivery: 2.8 days",
+      icon: Truck,
+      color: "text-blue-700 bg-blue-50 border-blue-200",
     },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Top Banner & Quick Action Buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-canvas-border pb-6">
+    <div className="space-y-6">
+      {/* Top Banner Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-canvas-border pb-5">
         <div>
-          <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-semibold">
-            BUYERA BACK-OFFICE OPERATIONS
+          <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-semibold font-mono">
+            BUYERA ATELIER OPERATIONS
           </span>
           <h1 className="font-editorial-heading text-2xl sm:text-3xl text-charcoal">
-            Overview & Storefront Analytics
+            Executive Overview & Sales Performance
           </h1>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex items-center gap-2.5">
           <Button
             onClick={fetchStats}
             variant="outline"
@@ -115,7 +165,7 @@ export default function AdminDashboardPage() {
             className="text-xs uppercase tracking-wider"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh Data
+            Refresh
           </Button>
 
           <Link href="/admin/products/new">
@@ -124,271 +174,250 @@ export default function AdminDashboardPage() {
               Add Product
             </Button>
           </Link>
-
-          <Link href="/admin/coupons">
-            <Button variant="gold" size="sm" className="text-xs uppercase tracking-wider">
-              <TicketPercent className="w-3.5 h-3.5 mr-1.5" />
-              Create Coupon
-            </Button>
-          </Link>
         </div>
       </div>
 
-      {successMsg && (
-        <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{successMsg}</span>
-        </div>
-      )}
-
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* 4 Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
             <div
               key={idx}
-              className="bg-white border border-canvas-border p-5 shadow-xs space-y-3 relative overflow-hidden"
+              className="bg-white border border-canvas-border p-5 rounded-xs shadow-xs space-y-3"
             >
               <div className="flex items-center justify-between">
                 <span className="text-[11px] uppercase tracking-wider text-charcoal/60 font-semibold">
                   {kpi.title}
                 </span>
-                <div className={`p-2 border rounded-sm ${kpi.color}`}>
+                <div className={`p-2 border rounded-xs ${kpi.color}`}>
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-bold text-charcoal font-sans tracking-tight">
-                {kpi.value}
+
+              <div>
+                <div className="text-2xl font-bold text-charcoal tracking-tight">
+                  {kpi.value}
+                </div>
+                <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                  <ArrowUpRight className="w-3 h-3 shrink-0" />
+                  {kpi.trend}
+                </p>
               </div>
-              <p className="text-[11px] text-charcoal/60 flex items-center gap-1">
-                <ArrowUpRight className="w-3 h-3 text-emerald-600" />
-                {kpi.trend}
-              </p>
+
+              <div className="pt-2 border-t border-canvas-border/60 text-[10px] text-charcoal/50 font-mono">
+                {kpi.subtext}
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Low Stock Alert & Quick Restock Widget */}
-      {stats?.lowStockProducts && stats.lowStockProducts.length > 0 && (
-        <div className="bg-amber-50/70 border border-amber-200 p-5 rounded-sm space-y-3">
-          <div className="flex items-center justify-between">
+      {/* Two Column Grid: Interactive Revenue Chart & Bestselling Products */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sales Chart Widget */}
+        <div className="lg:col-span-2 bg-white border border-canvas-border p-6 rounded-xs shadow-xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-canvas-border pb-4">
+            <div>
+              <span className="text-[10px] uppercase tracking-widest text-gold-dark font-semibold">
+                FINANCIAL TRENDLINE
+              </span>
+              <h2 className="font-editorial-heading text-lg text-charcoal">
+                Revenue & Sales Trajectory
+              </h2>
+            </div>
+
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-700" />
-              <h2 className="text-xs uppercase tracking-wider font-bold text-amber-900">
-                Low Inventory Alert ({stats.lowStockProducts.length} Items Critical)
+              <div className="bg-cream-100 p-0.5 border border-canvas-border flex rounded-xs text-[10px] uppercase font-semibold">
+                <button
+                  onClick={() => setChartView("MONTHLY")}
+                  className={`px-2.5 py-1 transition-all ${
+                    chartView === "MONTHLY"
+                      ? "bg-charcoal text-white shadow-xs"
+                      : "text-charcoal/60 hover:text-charcoal"
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setChartView("WEEKLY")}
+                  className={`px-2.5 py-1 transition-all ${
+                    chartView === "WEEKLY"
+                      ? "bg-charcoal text-white shadow-xs"
+                      : "text-charcoal/60 hover:text-charcoal"
+                  }`}
+                >
+                  Weekly
+                </button>
+              </div>
+
+              <Link
+                href="/admin/analytics"
+                className="p-1.5 border border-canvas-border hover:bg-cream-50 text-charcoal/70 rounded-xs"
+                title="Full Analytics"
+              >
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Interactive Bar Chart Visualization */}
+          <div className="h-64 flex items-end justify-between gap-2 sm:gap-4 pt-8 px-2">
+            {activeChartData.map((item, i) => (
+              <div
+                key={i}
+                className="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer"
+              >
+                {/* Tooltip on Hover */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-charcoal text-white text-[10px] font-mono px-2 py-1 rounded-xs pointer-events-none shadow-md">
+                  {formatPrice(item.revenue)}
+                </div>
+
+                {/* Bar */}
+                <div
+                  style={{ height: `${item.height}%` }}
+                  className="w-full max-w-[42px] bg-cream-200 group-hover:bg-[#C5A880] transition-all rounded-t-xs relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-charcoal/20 to-transparent" />
+                </div>
+
+                {/* Label */}
+                <span className="text-[10px] font-mono uppercase text-charcoal/60 group-hover:text-charcoal font-semibold">
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between border-t border-canvas-border pt-3 text-xs text-charcoal/60">
+            <span>Peak Period: August (₹5,84,000)</span>
+            <span className="font-semibold text-emerald-700">
+              Avg Growth Rate: +18.4% MoM
+            </span>
+          </div>
+        </div>
+
+        {/* Bestselling Silhouettes Widget */}
+        <div className="bg-white border border-canvas-border p-6 rounded-xs shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-canvas-border pb-3">
+            <div>
+              <span className="text-[10px] uppercase tracking-widest text-gold-dark font-semibold">
+                TOP SILHOUETTES
+              </span>
+              <h2 className="font-editorial-heading text-lg text-charcoal">
+                Bestselling Catalog
               </h2>
             </div>
             <Link
               href="/admin/products"
-              className="text-[11px] text-amber-800 underline font-semibold uppercase tracking-wider"
+              className="text-[11px] text-gold-dark underline uppercase tracking-wider font-semibold"
             >
-              Manage Inventory
+              All Items
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            {stats.lowStockProducts.map((p: any) => (
-              <div
-                key={p.id}
-                className="bg-white border border-amber-200 p-3 text-xs flex items-center justify-between"
-              >
-                <div className="min-w-0 pr-2">
-                  <p className="font-semibold text-charcoal truncate">{p.name}</p>
-                  <p className="text-[10px] text-charcoal/60 font-mono">
-                    Size: {p.size} • Color: {p.color}
-                  </p>
-                  <span className="inline-block mt-1 text-[10px] bg-rose-100 text-rose-800 font-bold px-1.5 py-0.5 rounded-xs">
-                    Only {p.stock} Left in Stock
-                  </span>
+          <div className="space-y-3.5">
+            {bestselling.map((prod, i) => (
+              <div key={i} className="flex items-center gap-3 text-xs">
+                <div className="relative w-12 h-14 bg-cream-100 border border-canvas-border shrink-0 overflow-hidden">
+                  <Image
+                    src={prod.image}
+                    alt={prod.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
 
-                <button
-                  onClick={() => setRestockingId(p.id)}
-                  className="px-2.5 py-1.5 bg-charcoal text-white text-[10px] uppercase font-bold tracking-wider hover:bg-black shrink-0"
-                >
-                  Restock
-                </button>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-charcoal truncate">
+                    {prod.name}
+                  </p>
+                  <p className="text-[10px] text-charcoal/50">{prod.category}</p>
+                  <p className="text-[11px] font-mono font-bold text-charcoal mt-0.5">
+                    {formatPrice(prod.revenue)}{" "}
+                    <span className="text-[10px] font-normal text-emerald-700">
+                      ({prod.sales})
+                    </span>
+                  </p>
+                </div>
+
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 border border-emerald-200">
+                  {prod.growth}
+                </span>
               </div>
             ))}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Restock Modal Dialog */}
-      {restockingId && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white border border-canvas-border p-6 max-w-sm w-full space-y-4 shadow-luxury">
-            <h3 className="font-editorial-heading text-lg text-charcoal">
-              Quick Stock Replenishment
-            </h3>
-            <p className="text-xs text-charcoal/70">
-              Enter the new inventory count for this variant:
-            </p>
-            <input
-              type="number"
-              min="1"
-              value={restockQty}
-              onChange={(e) => setRestockQty(Number(e.target.value))}
-              className="w-full border border-canvas-border p-2.5 text-xs text-charcoal font-mono"
-            />
-            <div className="flex gap-2 justify-end pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setRestockingId(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => handleQuickRestock(restockingId)}
-              >
-                Save Inventory
-              </Button>
-            </div>
+      {/* Recent Orders Pipeline Table */}
+      <div className="bg-white border border-canvas-border p-6 rounded-xs shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-canvas-border pb-3">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4 text-gold-dark" />
+            <h2 className="font-editorial-heading text-lg text-charcoal">
+              Live Order Pipeline & Dispatches
+            </h2>
           </div>
+          <Link
+            href="/admin/orders"
+            className="text-xs uppercase tracking-widest text-gold-dark hover:underline font-semibold flex items-center gap-1"
+          >
+            Manage All Orders <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
-      )}
 
-      {/* Two Column Grid: Recent Orders & Quick Management Shortcuts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Orders Table */}
-        <div className="lg:col-span-2 bg-white border border-canvas-border p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-canvas-border pb-3">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-gold" />
-              <h2 className="font-editorial-heading text-lg text-charcoal">
-                Recent Orders Pipeline
-              </h2>
-            </div>
-            <Link
-              href="/admin/orders"
-              className="text-xs uppercase tracking-widest text-gold-dark hover:underline font-semibold"
-            >
-              All Orders ({stats?.totalOrders || 42})
-            </Link>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-canvas-border text-charcoal/50 uppercase tracking-widest">
-                  <th className="py-3 px-3">Order Number</th>
-                  <th className="py-3 px-3">Customer</th>
-                  <th className="py-3 px-3">Amount</th>
-                  <th className="py-3 px-3">Payment</th>
-                  <th className="py-3 px-3">Status</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-canvas-border text-charcoal/50 uppercase tracking-widest text-[11px]">
+                <th className="py-3 px-3">Order Number</th>
+                <th className="py-3 px-3">Patron Name</th>
+                <th className="py-3 px-3">Amount</th>
+                <th className="py-3 px-3">Payment</th>
+                <th className="py-3 px-3">Logistics Status</th>
+                <th className="py-3 px-3 text-right">Quick Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-canvas-border">
+              {(stats?.recentOrders || []).map((order: any) => (
+                <tr key={order.id} className="hover:bg-cream-50 transition-colors">
+                  <td className="py-3 px-3 font-mono font-bold text-charcoal">
+                    <Link
+                      href="/admin/orders"
+                      className="hover:underline text-gold-dark"
+                    >
+                      {order.orderNumber}
+                    </Link>
+                  </td>
+                  <td className="py-3 px-3 font-semibold text-charcoal">
+                    {order.customerName}
+                  </td>
+                  <td className="py-3 px-3 font-bold text-charcoal">
+                    {formatPrice(order.total)}
+                  </td>
+                  <td className="py-3 px-3">
+                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] uppercase font-bold">
+                      {order.paymentMethod} • {order.paymentStatus}
+                    </span>
+                  </td>
+                  <td className="py-3 px-3">
+                    <span className="px-2 py-0.5 bg-cream-200 text-charcoal border border-canvas-border text-[10px] uppercase font-semibold">
+                      {order.orderStatus}
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-right">
+                    <Link
+                      href="/admin/orders"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-charcoal text-white text-[11px] uppercase tracking-wider hover:bg-black rounded-xs"
+                    >
+                      Inspect Order
+                    </Link>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-canvas-border">
-                {(stats?.recentOrders || []).map((order: any) => (
-                  <tr key={order.id} className="hover:bg-cream-50 transition-colors">
-                    <td className="py-3 px-3 font-mono font-medium text-charcoal">
-                      <Link
-                        href="/admin/orders"
-                        className="hover:underline text-gold-dark"
-                      >
-                        {order.orderNumber}
-                      </Link>
-                    </td>
-                    <td className="py-3 px-3 font-medium text-charcoal">
-                      {order.customerName}
-                    </td>
-                    <td className="py-3 px-3 font-semibold text-charcoal">
-                      {formatPrice(order.total)}
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] uppercase font-semibold">
-                        {order.paymentMethod} • {order.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 bg-cream-200 text-charcoal border border-canvas-border text-[10px] uppercase font-medium">
-                        {order.orderStatus}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Quick Management Hub */}
-        <div className="bg-white border border-canvas-border p-6 shadow-xs space-y-4 self-start">
-          <h2 className="font-editorial-heading text-lg text-charcoal border-b border-canvas-border pb-3">
-            Quick Navigation Hub
-          </h2>
-
-          <div className="space-y-2.5">
-            <Link
-              href="/admin/products"
-              className="p-3 border border-canvas-border hover:border-gold hover:bg-cream-50 transition-all flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-charcoal block"
-            >
-              <div className="flex items-center gap-2.5">
-                <Package className="w-4 h-4 text-gold-dark" />
-                <span>Products & Stock</span>
-              </div>
-              <span className="text-[10px] font-mono text-charcoal/50">
-                {stats?.totalProducts || 16} Items
-              </span>
-            </Link>
-
-            <Link
-              href="/admin/categories"
-              className="p-3 border border-canvas-border hover:border-gold hover:bg-cream-50 transition-all flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-charcoal block"
-            >
-              <div className="flex items-center gap-2.5">
-                <FolderTree className="w-4 h-4 text-gold-dark" />
-                <span>Categories</span>
-              </div>
-              <span className="text-[10px] font-mono text-charcoal/50">
-                4 Catalogues
-              </span>
-            </Link>
-
-            <Link
-              href="/admin/coupons"
-              className="p-3 border border-canvas-border hover:border-gold hover:bg-cream-50 transition-all flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-charcoal block"
-            >
-              <div className="flex items-center gap-2.5">
-                <TicketPercent className="w-4 h-4 text-gold-dark" />
-                <span>Discount Coupons</span>
-              </div>
-              <span className="text-[10px] font-mono text-charcoal/50">
-                {stats?.activeCoupons || 3} Active
-              </span>
-            </Link>
-
-            <Link
-              href="/admin/users"
-              className="p-3 border border-canvas-border hover:border-gold hover:bg-cream-50 transition-all flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-charcoal block"
-            >
-              <div className="flex items-center gap-2.5">
-                <Users className="w-4 h-4 text-gold-dark" />
-                <span>Customer Registry</span>
-              </div>
-              <span className="text-[10px] font-mono text-charcoal/50">
-                {stats?.totalCustomers || 128} Registered
-              </span>
-            </Link>
-
-            <Link
-              href="/admin/settings"
-              className="p-3 border border-canvas-border hover:border-gold hover:bg-cream-50 transition-all flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-charcoal block"
-            >
-              <div className="flex items-center gap-2.5">
-                <Truck className="w-4 h-4 text-gold-dark" />
-                <span>Shipping & Store Settings</span>
-              </div>
-              <span className="text-[10px] font-mono text-emerald-700">
-                Configured
-              </span>
-            </Link>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
