@@ -26,6 +26,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, product });
   } catch (error: any) {
+    console.error("Failed to fetch product:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to fetch product" },
       { status: 500 }
@@ -183,76 +184,65 @@ export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
 ) {
+  const productId = params.id;
+
   try {
-    const productId = params.id;
+    // Wrap entire cascade cleanup inside a Prisma interactive transaction ($transaction)
+    await prisma.$transaction(async (tx) => {
+      // 1. Delete CartItems pointing to this product or any of its variants
+      await tx.cartItem.deleteMany({
+        where: {
+          OR: [
+            { productId },
+            { variant: { productId } },
+          ],
+        },
+      });
 
-    // Verify product exists
-    const existing = await prisma.product.findUnique({
-      where: { id: productId },
-      include: { variants: true },
-    });
+      // 2. Unlink OrderItems referencing any variant of this product (to preserve order receipts)
+      await tx.orderItem.updateMany({
+        where: {
+          variant: { productId },
+        },
+        data: {
+          variantId: null,
+        },
+      });
 
-    if (!existing) {
-      return NextResponse.json(
-        { success: false, error: "Product not found." },
-        { status: 404 }
-      );
-    }
+      // 3. Delete Wishlist items
+      await tx.wishlistItem.deleteMany({
+        where: { productId },
+      });
 
-    // Safely delete / unlink all foreign key relations before deleting Product:
-    // 1. Delete CartItems pointing to this product or any of its variants
-    await prisma.cartItem.deleteMany({
-      where: {
-        OR: [
-          { productId },
-          { variant: { productId } },
-        ],
-      },
-    });
+      // 4. Delete Reviews
+      await tx.review.deleteMany({
+        where: { productId },
+      });
 
-    // 2. Unlink OrderItems referencing any variant of this product (preserve order receipt snapshot)
-    await prisma.orderItem.updateMany({
-      where: {
-        variant: { productId },
-      },
-      data: {
-        variantId: null,
-      },
-    });
+      // 5. Delete Product Images
+      await tx.productImage.deleteMany({
+        where: { productId },
+      });
 
-    // 3. Delete Wishlist items
-    await prisma.wishlistItem.deleteMany({
-      where: { productId },
-    });
+      // 6. Delete Product Variants
+      await tx.productVariant.deleteMany({
+        where: { productId },
+      });
 
-    // 4. Delete Reviews
-    await prisma.review.deleteMany({
-      where: { productId },
-    });
-
-    // 5. Delete Product Images
-    await prisma.productImage.deleteMany({
-      where: { productId },
-    });
-
-    // 6. Delete Product Variants
-    await prisma.productVariant.deleteMany({
-      where: { productId },
-    });
-
-    // 7. Delete Product record
-    await prisma.product.delete({
-      where: { id: productId },
+      // 7. Delete the main Product record
+      await tx.product.delete({
+        where: { id: productId },
+      });
     });
 
     return NextResponse.json({
       success: true,
-      message: `Product "${existing.name}" was permanently deleted.`,
+      message: "Product deleted successfully",
     });
   } catch (error: any) {
-    console.error("Safe cascade delete product error:", error);
+    console.error("Failed to delete product:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to delete product." },
+      { error: error.message || "Failed to delete product" },
       { status: 500 }
     );
   }

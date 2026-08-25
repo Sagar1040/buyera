@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Package,
   PlusCircle,
@@ -24,6 +25,7 @@ import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
 
 export default function AdminProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,24 +100,33 @@ export default function AdminProductsPage() {
 
   const confirmDeleteProduct = async () => {
     if (!deletingProduct) return;
+    const targetProduct = deletingProduct;
     setIsDeleting(true);
     setErrorMsg(null);
 
     try {
-      const res = await fetch(`/api/admin/products/${deletingProduct.id}`, {
+      const res = await fetch(`/api/admin/products/${targetProduct.id}`, {
         method: "DELETE",
       });
       const data = await res.json();
 
-      if (!res.ok || !data.success) {
+      if (!res.ok) {
         throw new Error(data.error || "Failed to delete product.");
       }
 
-      setProducts((prev) => prev.filter((p) => p.id !== deletingProduct.id));
-      setSuccessMsg(data.message || `Product "${deletingProduct.name}" removed successfully.`);
-      setTimeout(() => setSuccessMsg(null), 4000);
+      // Instantly close modal
       setDeletingProduct(null);
+
+      // Remove from local React state
+      setProducts((prev) => prev.filter((p) => p.id !== targetProduct.id));
+
+      // Trigger router refresh
+      router.refresh();
+
+      setSuccessMsg(data.message || `Product "${targetProduct.name}" deleted successfully.`);
+      setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
+      console.error("Delete product error in frontend:", err);
       setErrorMsg(err.message || "Failed to delete product.");
     } finally {
       setIsDeleting(false);
@@ -425,9 +436,9 @@ export default function AdminProductsPage() {
               </p>
               <div className="p-3 bg-rose-50/70 border border-rose-100 text-[11px] text-rose-800 space-y-1">
                 <p>
-                  • Related images, reviews, and stock variants will be cleanly unlinked.
+                  • Related images, reviews, and stock variants will be cleanly unlinked via transaction.
                 </p>
-                <p>• Previous customer order records will maintain their historical items snapshot.</p>
+                <p>• Historical order records will preserve their purchase snapshots safely.</p>
               </div>
             </div>
 
@@ -446,9 +457,9 @@ export default function AdminProductsPage() {
                 size="sm"
                 onClick={confirmDeleteProduct}
                 isLoading={isDeleting}
-                className="bg-rose-600 hover:bg-rose-700 text-white text-xs border-rose-600"
+                className="bg-rose-600 hover:bg-rose-700 text-white text-xs border-rose-600 font-bold uppercase tracking-wider"
               >
-                Delete Permanently
+                DELETE PERMANENTLY
               </Button>
             </div>
           </div>
