@@ -3,23 +3,30 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Sparkles, ArrowRight, ShieldCheck, Scissors } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  Scissors,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 interface HeroSlide {
-  id: number;
+  id: string | number;
   tag: string;
   badge: string;
   title: string;
   subtitle: string;
   ctaPrimary: { text: string; href: string };
-  ctaSecondary: { text: string; href: string };
+  ctaSecondary?: { text: string; href: string };
   image: string;
 }
 
-const slides: HeroSlide[] = [
+const DEFAULT_SLIDES: HeroSlide[] = [
   {
-    id: 1,
+    id: "default-1",
     tag: "FESTIVE COUTURE 2026",
     badge: "READY TO SHIP",
     title: "The Royal Festive & Eid Collection",
@@ -31,7 +38,7 @@ const slides: HeroSlide[] = [
       "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1920&auto=format&fit=crop",
   },
   {
-    id: 2,
+    id: "default-2",
     tag: "PAKISTANI DESIGNER EDIT",
     badge: "CUSTOM TAILORING",
     title: "Pakistani Lawn & Anarkali Ensembles",
@@ -43,7 +50,7 @@ const slides: HeroSlide[] = [
       "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1920&auto=format&fit=crop",
   },
   {
-    id: 3,
+    id: "default-3",
     tag: "MEDINA SILK HERITAGE",
     badge: "BESTSELLER",
     title: "Luxury Medina Silk & Chiffon Shaylas",
@@ -57,16 +64,56 @@ const slides: HeroSlide[] = [
 ];
 
 export function HeroBanner() {
+  const [slides, setSlides] = useState<HeroSlide[]>(DEFAULT_SLIDES);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    if (isPaused) return;
+    // Fetch live active banners from backend DB
+    const fetchLiveBanners = async () => {
+      try {
+        const res = await fetch("/api/admin/banners");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
+          const activeBanners = data.banners.filter((b: any) => b.isActive !== false);
+
+          if (activeBanners.length > 0) {
+            const mappedSlides: HeroSlide[] = activeBanners.map((b: any, idx: number) => ({
+              id: b.id || `banner-${idx}`,
+              tag: b.badge || "EXCLUSIVE ATELIER",
+              badge: "HAUTE COUTURE",
+              title: b.title,
+              subtitle:
+                b.subtitle ||
+                "Exquisite handcrafted silhouettes tailored with artisanal mastery.",
+              ctaPrimary: {
+                text: b.ctaText || "SHOP COLLECTION",
+                href: b.ctaUrl || b.ctaLink || "/shop",
+              },
+              ctaSecondary: {
+                text: "DISCOVER NEW",
+                href: "/shop?sort=newest",
+              },
+              image: b.imageUrl,
+            }));
+            setSlides(mappedSlides);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load dynamic banners, using luxury defaults:", err);
+      }
+    };
+
+    fetchLiveBanners();
+  }, []);
+
+  useEffect(() => {
+    if (isPaused || slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, [isPaused]);
+  }, [isPaused, slides.length]);
 
   const handlePrev = () => {
     setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
@@ -76,6 +123,8 @@ export function HeroBanner() {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
+  const activeIndex = currentSlide % (slides.length || 1);
+
   return (
     <section
       className="relative w-full h-[620px] sm:h-[720px] bg-charcoal overflow-hidden select-none"
@@ -84,7 +133,7 @@ export function HeroBanner() {
     >
       {/* Slides */}
       {slides.map((slide, index) => {
-        const isActive = index === currentSlide;
+        const isActive = index === activeIndex;
         return (
           <div
             key={slide.id}
@@ -93,15 +142,18 @@ export function HeroBanner() {
             }`}
           >
             {/* Background Image with Cinematic Luxury Gradient */}
-            <Image
-              src={slide.image}
-              alt={slide.title}
-              fill
-              priority={index === 0}
-              className="object-cover object-center transform scale-105 transition-transform duration-[10000ms] ease-out"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-charcoal/90 via-charcoal/60 to-charcoal/30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-transparent to-black/20" />
+            <div className="absolute inset-0 w-full h-full">
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-[10000ms] ease-out"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = "none";
+                }}
+              />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-charcoal/95 via-charcoal/65 to-charcoal/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-transparent to-black/30" />
 
             {/* Slide Content */}
             <div className="container mx-auto h-full px-6 sm:px-12 flex items-center relative z-20">
@@ -135,15 +187,17 @@ export function HeroBanner() {
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
-                  <Link href={slide.ctaSecondary.href}>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="text-xs tracking-widest uppercase text-white border-white/60 hover:bg-white hover:text-charcoal"
-                    >
-                      {slide.ctaSecondary.text}
-                    </Button>
-                  </Link>
+                  {slide.ctaSecondary && (
+                    <Link href={slide.ctaSecondary.href}>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="text-xs tracking-widest uppercase text-white border-white/60 hover:bg-white hover:text-charcoal"
+                      >
+                        {slide.ctaSecondary.text}
+                      </Button>
+                    </Link>
+                  )}
                 </div>
 
                 {/* Micro Guarantees */}
@@ -164,34 +218,40 @@ export function HeroBanner() {
       })}
 
       {/* Navigation Arrows */}
-      <button
-        onClick={handlePrev}
-        aria-label="Previous Slide"
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-charcoal/50 hover:bg-gold text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all hover:scale-110"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-      <button
-        onClick={handleNext}
-        aria-label="Next Slide"
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-charcoal/50 hover:bg-gold text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all hover:scale-110"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
+      {slides.length > 1 && (
+        <>
+          <button
+            onClick={handlePrev}
+            aria-label="Previous Slide"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-charcoal/50 hover:bg-gold text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all hover:scale-110"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={handleNext}
+            aria-label="Next Slide"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-charcoal/50 hover:bg-gold text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all hover:scale-110"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </>
+      )}
 
       {/* Slide Indicator Dots */}
-      <div className="absolute bottom-6 inset-x-0 z-30 flex items-center justify-center space-x-2.5">
-        {slides.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => setCurrentSlide(idx)}
-            aria-label={`Go to slide ${idx + 1}`}
-            className={`h-1.5 transition-all duration-300 ${
-              currentSlide === idx ? "w-8 bg-gold" : "w-2 bg-white/40 hover:bg-white/70"
-            }`}
-          />
-        ))}
-      </div>
+      {slides.length > 1 && (
+        <div className="absolute bottom-6 inset-x-0 z-30 flex items-center justify-center space-x-2.5">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentSlide(idx)}
+              aria-label={`Go to slide ${idx + 1}`}
+              className={`h-1.5 transition-all duration-300 ${
+                activeIndex === idx ? "w-8 bg-gold" : "w-2 bg-white/40 hover:bg-white/70"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

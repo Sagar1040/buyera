@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    let session = null;
-    try {
-      session = await getServerSession(authOptions);
-    } catch (e) {}
-
-    // Fallback mock stats if database is empty or running offline
+    // Mock fallback stats in case DB has no seeded records or is offline
     const fallbackStats = {
       totalRevenue: 485290,
       totalOrders: 42,
@@ -76,14 +69,6 @@ export async function GET() {
           color: "Champagne Gold",
           stock: 3,
         },
-        {
-          id: "p3",
-          name: "Lahore Velvet Embroidered Anarkali",
-          sku: "SUIT-VLV-003",
-          size: "M",
-          color: "Royal Ruby",
-          stock: 1,
-        },
       ],
     };
 
@@ -108,7 +93,7 @@ export async function GET() {
           take: 10,
         }),
         prisma.order.findMany({
-          take: 5,
+          take: 6,
           orderBy: { createdAt: "desc" },
           include: {
             user: true,
@@ -118,10 +103,14 @@ export async function GET() {
         }),
       ]);
 
-      if (orders.length > 0 || productsCount > 0) {
+      if (orders.length > 0 || productsCount > 0 || usersCount > 0) {
         const totalRevenue = orders.reduce((acc, o) => acc + (o.total || 0), 0);
         const pendingOrders = orders.filter(
-          (o) => o.orderStatus === "PLACED" || o.orderStatus === "CONFIRMED" || o.orderStatus === "PROCESSING"
+          (o) =>
+            o.orderStatus === "PLACED" ||
+            o.orderStatus === "CONFIRMED" ||
+            o.orderStatus === "PROCESSING" ||
+            o.orderStatus === "PACKED"
         ).length;
 
         return NextResponse.json({
@@ -137,8 +126,11 @@ export async function GET() {
             recentOrders: recentDbOrders.map((ord) => ({
               id: ord.id,
               orderNumber: ord.orderNumber,
-              customerName: ord.shippingAddress?.fullName || ord.user?.name || "Guest Patron",
-              customerEmail: ord.user?.email || "guest@buyera.in",
+              customerName:
+                ord.shippingAddress?.fullName ||
+                ord.user?.name ||
+                "Patron",
+              customerEmail: ord.user?.email || "customer@buyera.in",
               itemsCount: ord.items?.length || 1,
               total: ord.total,
               paymentMethod: ord.paymentMethod,
@@ -148,7 +140,7 @@ export async function GET() {
             })),
             lowStockProducts: variants.map((v) => ({
               id: v.id,
-              name: v.product?.name || "Product Variant",
+              name: v.product?.name || "Boutique Silhouette",
               sku: v.sku,
               size: v.size,
               color: v.color,

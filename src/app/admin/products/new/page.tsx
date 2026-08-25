@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { ImageUploadDropzone } from "@/components/admin/ImageUploadDropzone";
 
 const COMMON_SIZES = ["52", "54", "56", "58", "60", "XS", "S", "M", "L", "XL", "Standard"];
 const COMMON_COLORS = [
@@ -68,7 +69,7 @@ export default function AdminNewProductPage() {
           setCategories(data.categories);
           setFormData((prev) => ({
             ...prev,
-            categoryId: data.categories[0].id,
+            categoryId: prev.categoryId || data.categories[0].id,
           }));
         }
       })
@@ -77,6 +78,14 @@ export default function AdminNewProductPage() {
 
   const handleAddImage = () => {
     setImages((prev) => [...prev, ""]);
+  };
+
+  const handleUpdateImage = (index: number, url: string) => {
+    setImages((prev) => {
+      const next = [...prev];
+      next[index] = url;
+      return next;
+    });
   };
 
   const handleRemoveImage = (index: number) => {
@@ -114,7 +123,7 @@ export default function AdminNewProductPage() {
         variants: variants.map((v, idx) => ({
           ...v,
           stock: Number(v.stock) || 0,
-          sku: v.sku || `${formData.sku || "BUY"}-${v.size}-${idx}`,
+          sku: v.sku || `${formData.sku || "BUY"}-${v.size}-${idx + 1}`,
         })),
       };
 
@@ -222,7 +231,7 @@ export default function AdminNewProductPage() {
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, sku: e.target.value }))
               }
-              placeholder="e.g. ABY-EME-001"
+              placeholder="e.g. BUY-ABY-001"
             />
           </div>
 
@@ -285,12 +294,17 @@ export default function AdminNewProductPage() {
           </div>
         </div>
 
-        {/* 2. Image Gallery URLs */}
+        {/* 2. Direct Image Upload & Gallery */}
         <div className="bg-white border border-canvas-border p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-canvas-border pb-2">
-            <h2 className="font-editorial-heading text-lg text-charcoal">
-              2. Product Image Gallery
-            </h2>
+            <div>
+              <h2 className="font-editorial-heading text-lg text-charcoal">
+                2. Product Image Gallery & Direct Upload
+              </h2>
+              <p className="text-[11px] text-charcoal/50">
+                Drag & drop files or enter direct image URLs. Image #1 will serve as the primary storefront thumbnail.
+              </p>
+            </div>
             <Button
               type="button"
               variant="outline"
@@ -298,36 +312,38 @@ export default function AdminNewProductPage() {
               onClick={handleAddImage}
               className="text-xs"
             >
-              <Plus className="w-3.5 h-3.5 mr-1" /> Add Image URL
+              <Plus className="w-3.5 h-3.5 mr-1" /> Add Image Slot
             </Button>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {images.map((img, idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <span className="text-xs font-mono text-charcoal/50 w-6">
-                  #{idx + 1}
-                </span>
-                <input
-                  type="url"
+              <div
+                key={idx}
+                className="p-3 border border-canvas-border/80 bg-cream-50/30 rounded-xs space-y-2 relative"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-gold-dark">
+                    {idx === 0 ? "★ Primary Image" : `Gallery Photo #${idx + 1}`}
+                  </span>
+                  {images.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(idx)}
+                      className="p-1 text-rose-600 hover:text-rose-800"
+                      title="Remove image"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <ImageUploadDropzone
                   value={img}
-                  onChange={(e) => {
-                    const newImgs = [...images];
-                    newImgs[idx] = e.target.value;
-                    setImages(newImgs);
-                  }}
-                  placeholder="https://images.unsplash.com/..."
-                  className="flex-1 border border-canvas-border p-2.5 text-xs text-charcoal font-mono focus:outline-none focus:border-gold"
+                  onChange={(newUrl) => handleUpdateImage(idx, newUrl)}
+                  label=""
+                  aspectRatio="product"
                 />
-                {images.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(idx)}
-                    className="p-2 text-rose-600 hover:text-rose-800"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
               </div>
             ))}
           </div>

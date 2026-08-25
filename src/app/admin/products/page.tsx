@@ -17,6 +17,8 @@ import {
   Sliders,
   Layers,
   ChevronDown,
+  X,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
@@ -32,6 +34,10 @@ export default function AdminProductsPage() {
 
   // Quick Stock Editing Modal
   const [stockEditingProduct, setStockEditingProduct] = useState<any | null>(null);
+
+  // Delete Confirmation Modal
+  const [deletingProduct, setDeletingProduct] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -90,15 +96,29 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+  const confirmDeleteProduct = async () => {
+    if (!deletingProduct) return;
+    setIsDeleting(true);
+    setErrorMsg(null);
+
     try {
-      await fetch(`/api/admin/products/${productId}`, { method: "DELETE" });
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
-      setSuccessMsg("Product deleted successfully.");
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err) {
-      setErrorMsg("Failed to delete product.");
+      const res = await fetch(`/api/admin/products/${deletingProduct.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to delete product.");
+      }
+
+      setProducts((prev) => prev.filter((p) => p.id !== deletingProduct.id));
+      setSuccessMsg(data.message || `Product "${deletingProduct.name}" removed successfully.`);
+      setTimeout(() => setSuccessMsg(null), 4000);
+      setDeletingProduct(null);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to delete product.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -198,9 +218,9 @@ export default function AdminProductsPage() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border border-canvas-border px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-gold"
+            className="border border-canvas-border p-2 bg-white text-xs text-charcoal focus:outline-none focus:border-gold"
           >
-            <option value="ALL">All Categories</option>
+            <option value="ALL">All Collections</option>
             {categories.map((c) => (
               <option key={c.id} value={c.slug}>
                 {c.name}
@@ -213,163 +233,236 @@ export default function AdminProductsPage() {
       {/* Products Table */}
       <div className="bg-white border border-canvas-border shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-cream-100/70 border-b border-canvas-border text-charcoal/60 uppercase tracking-widest text-[11px]">
-                <th className="py-3.5 px-4">Product Info</th>
+              <tr className="bg-cream-100/70 border-b border-canvas-border text-[10px] font-semibold uppercase tracking-wider text-charcoal/70">
+                <th className="py-3.5 px-4">Item & Silhouette</th>
+                <th className="py-3.5 px-4">SKU / Code</th>
                 <th className="py-3.5 px-4">Category</th>
-                <th className="py-3.5 px-4">Price & MRP</th>
-                <th className="py-3.5 px-4">Total Inventory</th>
-                <th className="py-3.5 px-4">Active Status</th>
+                <th className="py-3.5 px-4">Pricing (MRP)</th>
+                <th className="py-3.5 px-4">Stock Matrix</th>
+                <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-canvas-border">
+
+            <tbody className="divide-y divide-canvas-border/60 font-sans">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-charcoal/50">
+                  <td colSpan={7} className="py-16 text-center text-charcoal/50">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-gold" />
-                    Loading product catalog...
+                    Fetching boutique catalog...
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-charcoal/50">
-                    No products found in this category.
+                  <td colSpan={7} className="py-16 text-center text-charcoal/50">
+                    <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                    No products found matching the criteria.
                   </td>
                 </tr>
               ) : (
-                products.map((p) => (
-                  <tr key={p.id} className="hover:bg-cream-50 transition-colors">
-                    {/* Thumbnail & Name */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-12 h-14 bg-cream-100 border border-canvas-border shrink-0 overflow-hidden">
-                          {p.image ? (
-                            <Image
-                              src={p.image}
+                products.map((p) => {
+                  const primaryImg =
+                    p.image ||
+                    (p.images && p.images[0]?.url) ||
+                    (Array.isArray(p.images) && p.images[0]) ||
+                    "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=200";
+
+                  const totalInventory =
+                    p.totalStock ??
+                    p.variants?.reduce((sum: number, v: any) => sum + (v.stock || 0), 0) ??
+                    0;
+
+                  return (
+                    <tr key={p.id} className="hover:bg-cream-50/60 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-14 relative bg-cream-100 shrink-0 border border-canvas-border/80 overflow-hidden">
+                            <img
+                              src={primaryImg}
                               alt={p.name}
-                              fill
-                              className="object-cover"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = "none";
+                              }}
                             />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[9px] text-charcoal/40">
-                              No Img
+                          </div>
+                          <div>
+                            <p className="font-semibold text-charcoal leading-tight line-clamp-1">
+                              {p.name}
+                            </p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              {p.isFeatured && (
+                                <span className="bg-gold/15 text-gold-dark text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.2 rounded-xs">
+                                  Featured
+                                </span>
+                              )}
+                              {p.isBestSeller && (
+                                <span className="bg-charcoal text-white text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.2 rounded-xs">
+                                  Bestseller
+                                </span>
+                              )}
+                              {p.isNew && (
+                                <span className="bg-emerald-100 text-emerald-800 text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.2 rounded-xs">
+                                  New
+                                </span>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <div className="min-w-0 max-w-xs">
-                          <p className="font-semibold text-charcoal truncate">
-                            {p.name}
-                          </p>
-                          <p className="text-[10px] text-charcoal/50 font-mono">
-                            SKU: {p.sku}
-                          </p>
-                          <div className="flex gap-1 mt-1">
-                            {p.isFeatured && (
-                              <span className="text-[9px] bg-gold/15 text-gold-dark font-bold px-1 py-0.2">
-                                FEATURED
-                              </span>
-                            )}
-                            {p.isBestSeller && (
-                              <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1 py-0.2">
-                                BESTSELLER
-                              </span>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Category */}
-                    <td className="py-3.5 px-4 font-medium text-charcoal">
-                      <span className="px-2 py-1 bg-cream-100 border border-canvas-border text-[11px]">
-                        {p.category}
-                      </span>
-                    </td>
+                      <td className="py-3 px-4 font-mono text-charcoal/70 text-[11px]">
+                        {p.sku || "N/A"}
+                      </td>
 
-                    {/* Price & MRP */}
-                    <td className="py-3.5 px-4">
-                      <p className="font-bold text-charcoal">
-                        {formatPrice(p.price)}
-                      </p>
-                      {p.mrp && p.mrp > p.price && (
-                        <p className="text-[10px] text-charcoal/40 line-through">
-                          {formatPrice(p.mrp)}
-                        </p>
-                      )}
-                    </td>
+                      <td className="py-3 px-4 text-charcoal/80">
+                        {p.category?.name || p.category || "Uncategorized"}
+                      </td>
 
-                    {/* Total Stock & Variant Manager Button */}
-                    <td className="py-3.5 px-4">
-                      <button
-                        onClick={() => setStockEditingProduct(p)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs border border-canvas-border hover:border-gold hover:bg-cream-100 transition-colors font-mono"
-                      >
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            p.totalStock > 5
-                              ? "bg-emerald-500"
-                              : p.totalStock > 0
-                              ? "bg-amber-500"
-                              : "bg-rose-500"
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-charcoal">
+                          {formatPrice(p.price)}
+                        </div>
+                        {p.mrp && p.mrp > p.price && (
+                          <div className="text-[10px] text-charcoal/40 line-through font-mono">
+                            {formatPrice(p.mrp)}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => setStockEditingProduct(p)}
+                          className="flex items-center gap-1.5 hover:text-gold-dark font-medium transition-colors"
+                        >
+                          <span
+                            className={`inline-block w-2 h-2 rounded-full ${
+                              totalInventory === 0
+                                ? "bg-rose-500"
+                                : totalInventory < 10
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
+                            }`}
+                          />
+                          <span className="font-mono font-bold">
+                            {totalInventory} units
+                          </span>
+                          <span className="text-[10px] text-charcoal/40">
+                            ({p.variants?.length || 0} variants)
+                          </span>
+                        </button>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => handleToggleStatus(p.id, p.isActive)}
+                          className={`text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider transition-colors border ${
+                            p.isActive
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                              : "bg-charcoal/5 text-charcoal/50 border-charcoal/20 hover:bg-charcoal/10"
                           }`}
-                        />
-                        <span className="font-bold text-charcoal">
-                          {p.totalStock}
-                        </span>{" "}
-                        Units ({p.variants?.length || 0} vars)
-                      </button>
-                    </td>
+                        >
+                          {p.isActive ? "Published" : "Draft (Hidden)"}
+                        </button>
+                      </td>
 
-                    {/* Active Status Toggle */}
-                    <td className="py-3.5 px-4">
-                      <button
-                        onClick={() => handleToggleStatus(p.id, p.isActive)}
-                        className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider border transition-colors ${
-                          p.isActive
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                            : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
-                        }`}
-                      >
-                        {p.isActive ? "ACTIVE" : "HIDDEN"}
-                      </button>
-                    </td>
+                      <td className="py-3 px-4 text-right space-x-1">
+                        <Link href={`/admin/products/${p.id}`}>
+                          <button
+                            title="Edit Product Details & Gallery"
+                            className="p-1.5 bg-white border border-canvas-border hover:border-gold hover:text-gold transition-colors text-charcoal/70 inline-block"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                        </Link>
 
-                    {/* Actions */}
-                    <td className="py-3.5 px-4 text-right space-x-2">
-                      <Link
-                        href={`/admin/products/${p.id}`}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-canvas-border text-charcoal hover:border-charcoal transition-colors text-xs"
-                      >
-                        <Edit className="w-3.5 h-3.5 text-gold-dark" />
-                        Edit
-                      </Link>
-
-                      <button
-                        onClick={() => handleDeleteProduct(p.id)}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition-colors text-xs"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                        <button
+                          onClick={() => setDeletingProduct(p)}
+                          title="Delete Product Permanently"
+                          className="p-1.5 bg-white border border-canvas-border hover:border-rose-500 hover:text-rose-600 transition-colors text-charcoal/70"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Variant Inventory Stock Modal */}
+      {/* Delete Confirmation Modal */}
+      {deletingProduct && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white max-w-md w-full p-6 shadow-2xl space-y-4 border border-canvas-border">
+            <div className="flex items-center justify-between border-b border-canvas-border pb-3">
+              <div className="flex items-center gap-2 text-rose-600 font-semibold">
+                <AlertTriangle className="w-5 h-5" />
+                <span className="text-sm font-bold uppercase tracking-wider">
+                  Confirm Deletion
+                </span>
+              </div>
+              <button
+                onClick={() => setDeletingProduct(null)}
+                disabled={isDeleting}
+                className="text-charcoal/50 hover:text-charcoal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs text-charcoal/80 leading-relaxed">
+                Are you sure you want to permanently delete{" "}
+                <strong className="text-charcoal font-bold">
+                  "{deletingProduct.name}"
+                </strong>
+                ?
+              </p>
+              <div className="p-3 bg-rose-50/70 border border-rose-100 text-[11px] text-rose-800 space-y-1">
+                <p>
+                  • Related images, reviews, and stock variants will be cleanly unlinked.
+                </p>
+                <p>• Previous customer order records will maintain their historical items snapshot.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeletingProduct(null)}
+                disabled={isDeleting}
+                className="text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={confirmDeleteProduct}
+                isLoading={isDeleting}
+                className="bg-rose-600 hover:bg-rose-700 text-white text-xs border-rose-600"
+              >
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Variant Quick Stock Modal */}
       {stockEditingProduct && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white border border-canvas-border p-6 max-w-lg w-full space-y-4 shadow-luxury">
+          <div className="bg-white max-w-lg w-full p-6 shadow-2xl space-y-4 border border-canvas-border">
             <div className="flex items-center justify-between border-b border-canvas-border pb-3">
               <div>
-                <span className="text-[10px] uppercase tracking-widest text-gold font-semibold">
-                  STOCK MATRIX
+                <span className="text-[10px] text-gold uppercase font-bold tracking-wider">
+                  QUICK INVENTORY MANAGER
                 </span>
                 <h3 className="font-editorial-heading text-lg text-charcoal">
                   {stockEditingProduct.name}
@@ -377,27 +470,23 @@ export default function AdminProductsPage() {
               </div>
               <button
                 onClick={() => setStockEditingProduct(null)}
-                className="text-xs text-charcoal/50 hover:text-charcoal"
+                className="text-charcoal/50 hover:text-charcoal"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-charcoal/70">
-              Update inventory count per size & color variant:
-            </p>
-
-            <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-              {(stockEditingProduct.variants || []).map((v: any) => (
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              {stockEditingProduct.variants?.map((v: any) => (
                 <div
                   key={v.id}
-                  className="p-3 border border-canvas-border flex items-center justify-between text-xs bg-cream-50/50"
+                  className="flex items-center justify-between p-3 border border-canvas-border bg-cream-50/50 text-xs"
                 >
                   <div>
-                    <p className="font-semibold text-charcoal font-mono">
-                      Size: {v.size} • Color: {v.color}
+                    <p className="font-semibold text-charcoal">
+                      Size: {v.size} • {v.color}
                     </p>
-                    <p className="text-[10px] text-charcoal/50 font-mono">
+                    <p className="text-[10px] font-mono text-charcoal/50">
                       SKU: {v.sku}
                     </p>
                   </div>
@@ -407,24 +496,37 @@ export default function AdminProductsPage() {
                       type="number"
                       min="0"
                       defaultValue={v.stock}
-                      onBlur={(e) =>
-                        handleSaveVariantStock(v.id, Number(e.target.value))
-                      }
-                      className="w-20 border border-canvas-border p-1.5 text-center font-mono font-bold text-charcoal bg-white"
+                      id={`stock-input-${v.id}`}
+                      className="w-20 border border-canvas-border p-1.5 text-center font-mono font-bold text-charcoal bg-white focus:outline-none focus:border-gold"
                     />
-                    <span className="text-[10px] text-charcoal/50">Units</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const inputEl = document.getElementById(
+                          `stock-input-${v.id}`
+                        ) as HTMLInputElement;
+                        if (inputEl) {
+                          handleSaveVariantStock(v.id, Number(inputEl.value));
+                        }
+                      }}
+                      className="text-[10px] px-2.5 py-1 uppercase tracking-wider"
+                    >
+                      Save
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-canvas-border">
+            <div className="flex justify-end pt-2 border-t border-canvas-border">
               <Button
                 variant="primary"
                 size="sm"
                 onClick={() => setStockEditingProduct(null)}
+                className="text-xs"
               >
-                Done Editing Stock
+                Done
               </Button>
             </div>
           </div>

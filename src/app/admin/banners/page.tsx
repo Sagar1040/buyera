@@ -13,9 +13,14 @@ import {
   X,
   ExternalLink,
   Eye,
+  Sliders,
+  Sparkles,
+  ArrowRight,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { ImageUploadDropzone } from "@/components/admin/ImageUploadDropzone";
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<any[]>([]);
@@ -62,9 +67,9 @@ export default function AdminBannersPage() {
     setForm({
       title: "",
       subtitle: "",
-      badge: "COUTURE ATELIER",
+      badge: "COUTURE ATELIER 2026",
       imageUrl:
-        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1920&auto=format&fit=crop",
       ctaText: "EXPLORE COLLECTION",
       ctaUrl: "/shop",
       order: banners.length + 1,
@@ -81,11 +86,33 @@ export default function AdminBannersPage() {
       badge: bnr.badge || "",
       imageUrl: bnr.imageUrl,
       ctaText: bnr.ctaText || "SHOP NOW",
-      ctaUrl: bnr.ctaUrl || "/shop",
+      ctaUrl: bnr.ctaUrl || bnr.ctaLink || "/shop",
       order: bnr.order || 0,
       isActive: Boolean(bnr.isActive),
     });
     setModalOpen(true);
+  };
+
+  const handleToggleActive = async (bannerId: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/banners/${bannerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBanners((prev) =>
+          prev.map((b) =>
+            b.id === bannerId ? { ...b, isActive: !currentStatus } : b
+          )
+        );
+        setSuccessMsg("Hero banner visibility status updated.");
+        setTimeout(() => setSuccessMsg(null), 3000);
+      }
+    } catch (err) {
+      setErrorMsg("Failed to toggle banner status.");
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -121,7 +148,7 @@ export default function AdminBannersPage() {
           ? "Hero banner updated successfully."
           : "New hero banner published to storefront."
       );
-      setTimeout(() => setSuccessMsg(null), 3000);
+      setTimeout(() => setSuccessMsg(null), 3500);
       setModalOpen(false);
       fetchBanners();
     } catch (err: any) {
@@ -135,10 +162,13 @@ export default function AdminBannersPage() {
     if (!confirm("Are you sure you want to remove this hero slider banner?"))
       return;
     try {
-      await fetch(`/api/admin/banners/${id}`, { method: "DELETE" });
-      setBanners((prev) => prev.filter((b) => b.id !== id));
-      setSuccessMsg("Banner removed.");
-      setTimeout(() => setSuccessMsg(null), 3000);
+      const res = await fetch(`/api/admin/banners/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setBanners((prev) => prev.filter((b) => b.id !== id));
+        setSuccessMsg("Banner removed successfully.");
+        setTimeout(() => setSuccessMsg(null), 3000);
+      }
     } catch (err) {
       setErrorMsg("Failed to delete banner.");
     }
@@ -175,7 +205,7 @@ export default function AdminBannersPage() {
             className="text-xs uppercase tracking-wider"
           >
             <PlusCircle className="w-3.5 h-3.5 mr-1.5 text-gold" />
-            Add Hero Slider
+            Upload New Banner
           </Button>
         </div>
       </div>
@@ -199,117 +229,171 @@ export default function AdminBannersPage() {
         {loading ? (
           <div className="col-span-full py-16 text-center text-charcoal/50">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-gold" />
-            Loading hero sliders...
+            Loading storefront hero banners...
           </div>
         ) : banners.length === 0 ? (
           <div className="col-span-full py-16 text-center text-charcoal/50 bg-white border border-canvas-border p-8">
-            No hero banners configured. Click "Add Hero Slider" to publish your first homepage slide.
+            <ImageIcon className="w-10 h-10 mx-auto mb-3 opacity-40 text-gold" />
+            <p className="font-semibold text-charcoal">No Hero Banners Found</p>
+            <p className="text-xs text-charcoal/50 mt-1 mb-4">
+              Upload your first homepage hero slider to wow your patrons.
+            </p>
+            <Button variant="primary" size="sm" onClick={handleOpenCreate}>
+              Upload First Banner
+            </Button>
           </div>
         ) : (
-          banners.map((bnr) => (
+          banners.map((bnr, idx) => (
             <div
               key={bnr.id}
-              className="bg-white border border-canvas-border rounded-xs shadow-xs overflow-hidden flex flex-col justify-between"
+              className={`bg-white border transition-all duration-300 shadow-xs flex flex-col justify-between overflow-hidden ${
+                bnr.isActive
+                  ? "border-canvas-border hover:border-gold/60"
+                  : "border-canvas-border/50 opacity-70 bg-cream-50/40"
+              }`}
             >
               <div>
-                {/* Banner Thumbnail */}
-                <div className="relative w-full h-44 bg-cream-200 overflow-hidden">
-                  <Image
+                {/* Visual Banner Preview */}
+                <div className="relative aspect-[16/9] w-full bg-charcoal overflow-hidden group">
+                  <img
                     src={bnr.imageUrl}
                     alt={bnr.title}
-                    fill
-                    className="object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                  <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/40 to-transparent flex flex-col justify-end p-4 text-white">
                     {bnr.badge && (
-                      <span className="text-[9px] uppercase tracking-widest text-[#E5D7B7] font-bold font-mono block mb-1">
+                      <span className="text-[9px] uppercase tracking-widest font-mono text-gold font-bold mb-1">
                         {bnr.badge}
                       </span>
                     )}
-                    <h3 className="font-editorial-heading text-base font-semibold leading-tight line-clamp-1">
+                    <h3 className="font-editorial-heading text-lg font-bold leading-tight">
                       {bnr.title}
                     </h3>
                   </div>
 
-                  <span
-                    className={`absolute top-2.5 right-2.5 px-2 py-0.5 text-[9px] uppercase font-bold border ${
-                      bnr.isActive
-                        ? "bg-emerald-600 text-white border-emerald-700"
-                        : "bg-black/80 text-white/70 border-white/20"
-                    }`}
-                  >
-                    {bnr.isActive ? "LIVE" : "PAUSED"}
+                  <span className="absolute top-2.5 right-2.5 bg-black/60 text-white text-[10px] font-mono px-2 py-0.5 backdrop-blur-xs">
+                    Slide #{bnr.order ?? idx + 1}
                   </span>
                 </div>
 
+                {/* Banner Metadata */}
                 <div className="p-4 space-y-2 text-xs">
-                  <p className="text-charcoal/70 line-clamp-2">
-                    {bnr.subtitle || "No subtitle provided."}
-                  </p>
+                  {bnr.subtitle && (
+                    <p className="text-charcoal/70 line-clamp-2 text-[11px] italic">
+                      "{bnr.subtitle}"
+                    </p>
+                  )}
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-charcoal/60 pt-2 border-t border-canvas-border">
-                    <span>Priority: #{bnr.order}</span>
-                    <span className="text-gold-dark font-semibold">
-                      CTA: {bnr.ctaText} ({bnr.ctaUrl})
+                  <div className="pt-2 border-t border-canvas-border/60 flex items-center justify-between text-[11px]">
+                    <span className="text-charcoal/60">CTA Button:</span>
+                    <span className="font-semibold text-charcoal flex items-center gap-1 font-mono">
+                      {bnr.ctaText || "SHOP NOW"} → {bnr.ctaUrl || bnr.ctaLink || "/shop"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="p-3 bg-cream-50/70 border-t border-canvas-border flex justify-end gap-2 text-xs">
+              {/* Action Bar */}
+              <div className="p-3 bg-cream-50/80 border-t border-canvas-border flex items-center justify-between text-xs">
+                {/* Active Toggle Switch */}
                 <button
-                  onClick={() => handleOpenEdit(bnr)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-canvas-border text-charcoal hover:border-charcoal transition-colors text-[11px] font-semibold"
+                  type="button"
+                  onClick={() => handleToggleActive(bnr.id, bnr.isActive)}
+                  className={`text-[10px] font-bold px-2 py-1 uppercase tracking-wider transition-colors border rounded-xs ${
+                    bnr.isActive
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                      : "bg-charcoal/10 text-charcoal/60 border-charcoal/20 hover:bg-charcoal/20"
+                  }`}
                 >
-                  <Edit className="w-3.5 h-3.5 text-gold-dark" />
-                  Edit Slide
+                  {bnr.isActive ? "● Live on Home" : "○ Draft / Hidden"}
                 </button>
 
-                <button
-                  onClick={() => handleDelete(bnr.id)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition-colors text-[11px]"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Delete
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handleOpenEdit(bnr)}
+                    title="Edit Banner Attributes"
+                    className="p-1.5 bg-white border border-canvas-border hover:border-gold hover:text-gold transition-colors text-charcoal/70 rounded-xs"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(bnr.id)}
+                    title="Remove Slide"
+                    className="p-1.5 bg-white border border-canvas-border hover:border-rose-500 hover:text-rose-600 transition-colors text-charcoal/70 rounded-xs"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* Banner Create / Edit Modal */}
+      {/* Upload / Edit Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white border border-canvas-border p-6 max-w-lg w-full space-y-4 shadow-luxury rounded-xs">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white max-w-xl w-full p-6 shadow-2xl space-y-4 border border-canvas-border my-8">
             <div className="flex items-center justify-between border-b border-canvas-border pb-3">
-              <h3 className="font-editorial-heading text-xl text-charcoal">
-                {editingBanner ? "Edit Hero Slide" : "Create Hero Slide"}
-              </h3>
+              <div>
+                <span className="text-[10px] text-gold uppercase font-bold tracking-widest">
+                  {editingBanner ? "HERO SLIDER EDITOR" : "BANNER STUDIO"}
+                </span>
+                <h3 className="font-editorial-heading text-xl text-charcoal">
+                  {editingBanner ? "Edit Homepage Slide" : "Upload New Hero Banner"}
+                </h3>
+              </div>
               <button
                 onClick={() => setModalOpen(false)}
-                className="text-xs text-charcoal/50 hover:text-charcoal"
+                className="text-charcoal/50 hover:text-charcoal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSave} className="space-y-4">
-              <Input
-                label="Headline Title *"
-                required
-                value={form.title}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, title: e.target.value }))
-                }
-                placeholder="e.g. The Royal Farasha Collection"
-              />
+              {/* Direct Image Upload Dropzone */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal mb-1">
+                  Banner Artwork Image *
+                </label>
+                <ImageUploadDropzone
+                  value={form.imageUrl}
+                  onChange={(url) => setForm((prev) => ({ ...prev, imageUrl: url }))}
+                  aspectRatio="banner"
+                  label=""
+                  placeholder="https://images.unsplash.com/..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  label="Headline Title *"
+                  required
+                  value={form.title}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, title: e.target.value }))
+                  }
+                  placeholder="e.g. The Royal Festive Collection"
+                />
+
+                <Input
+                  label="Category Badge / Tag"
+                  value={form.badge}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, badge: e.target.value }))
+                  }
+                  placeholder="e.g. AUTUMN / WINTER 2026"
+                />
+              </div>
 
               <div className="space-y-1">
                 <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal">
-                  Subtitle / Editorial Caption
+                  Subheading Narrative
                 </label>
                 <textarea
                   rows={2}
@@ -317,100 +401,80 @@ export default function AdminBannersPage() {
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, subtitle: e.target.value }))
                   }
-                  placeholder="e.g. Handcrafted in Grade-A Korean Nida with bespoke Zardozi threadwork."
-                  className="w-full border border-canvas-border p-2.5 text-xs text-charcoal focus:outline-none focus:border-gold"
+                  placeholder="e.g. Handcrafted in Grade-A Korean Nida with bespoke Zardozi metallic threadwork."
+                  className="w-full border border-canvas-border p-2 text-xs text-charcoal focus:outline-none focus:border-gold"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Input
-                  label="Category Badge"
-                  value={form.badge}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, badge: e.target.value }))
-                  }
-                  placeholder="e.g. AUTUMN/WINTER 2026"
-                />
-                <Input
-                  label="Display Order / Priority"
-                  type="number"
-                  value={form.order}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      order: Number(e.target.value),
-                    }))
-                  }
-                />
-              </div>
-
-              <Input
-                label="Hero Image URL *"
-                type="url"
-                required
-                value={form.imageUrl}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, imageUrl: e.target.value }))
-                }
-                placeholder="https://images.unsplash.com/photo-..."
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Call to Action Button Text"
+                  label="CTA Button Text"
                   value={form.ctaText}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, ctaText: e.target.value }))
                   }
-                  placeholder="e.g. EXPLORE ATELIER"
+                  placeholder="EXPLORE COLLECTION"
                 />
+
                 <Input
-                  label="Target Link (URL)"
+                  label="CTA Target Link"
                   value={form.ctaUrl}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, ctaUrl: e.target.value }))
                   }
                   placeholder="/shop?category=abayas"
                 />
+
+                <Input
+                  label="Display Order #"
+                  type="number"
+                  value={form.order.toString()}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      order: Number(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="1"
+                />
               </div>
 
-              <div className="pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-xs">
+              <div className="pt-2 border-t border-canvas-border flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.isActive}
                     onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        isActive: e.target.checked,
-                      }))
+                      setForm((prev) => ({ ...prev, isActive: e.target.checked }))
                     }
                     className="w-4 h-4 accent-charcoal"
                   />
-                  <span className="font-semibold">
-                    Set Live in Homepage Carousel
+                  <span className="font-semibold text-charcoal">
+                    Publish Live to Storefront Immediately
                   </span>
                 </label>
-              </div>
 
-              <div className="flex justify-end gap-2.5 pt-3 border-t border-canvas-border">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="gold"
-                  size="sm"
-                  isLoading={saving}
-                  className="text-xs uppercase tracking-wider font-bold"
-                >
-                  {editingBanner ? "Save Slide" : "Publish Slide"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setModalOpen(false)}
+                    className="text-xs"
+                  >
+                    Cancel
+                  </Button>
+
+                  <Button
+                    type="submit"
+                    variant="gold"
+                    size="sm"
+                    isLoading={saving}
+                    className="text-xs uppercase tracking-wider font-bold"
+                  >
+                    {editingBanner ? "Save Changes" : "Publish Banner"}
+                  </Button>
+                </div>
               </div>
             </form>
           </div>

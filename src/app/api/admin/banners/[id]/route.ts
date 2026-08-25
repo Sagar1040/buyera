@@ -9,19 +9,30 @@ export async function PUT(
 ) {
   try {
     const body = await req.json();
-    const { title, subtitle, badge, imageUrl, ctaText, ctaUrl, isActive, order } =
-      body;
+    const {
+      title,
+      subtitle,
+      badge,
+      imageUrl,
+      ctaText,
+      ctaUrl,
+      ctaLink,
+      isActive,
+      order,
+    } = body;
+
+    const finalCta = ctaUrl !== undefined ? ctaUrl : ctaLink;
 
     try {
       const updated = await prisma.banner.update({
         where: { id: params.id },
         data: {
-          ...(title && { title: title.trim() }),
+          ...(title !== undefined && { title: title.trim() }),
           ...(subtitle !== undefined && { subtitle }),
           ...(badge !== undefined && { badge }),
           ...(imageUrl !== undefined && { imageUrl: imageUrl.trim() }),
           ...(ctaText !== undefined && { ctaText }),
-          ...(ctaUrl !== undefined && { ctaUrl }),
+          ...(finalCta !== undefined && { ctaUrl: finalCta }),
           ...(isActive !== undefined && { isActive: Boolean(isActive) }),
           ...(order !== undefined && { order: Number(order) }),
         },

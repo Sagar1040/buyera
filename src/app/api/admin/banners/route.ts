@@ -20,36 +20,36 @@ export async function GET() {
     const fallbackBanners = [
       {
         id: "bnr-1",
-        title: "The Royal Farasha Collection",
-        subtitle: "Handcrafted in Grade-A Korean Nida with bespoke Zardozi metallic threadwork.",
-        badge: "AUTUMN/WINTER 2026",
-        imageUrl: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1600&auto=format&fit=crop",
-        ctaText: "EXPLORE ATELIER",
-        ctaUrl: "/shop?category=abayas",
+        title: "The Royal Festive & Eid Collection",
+        subtitle: "Exquisite hand-embroidered Korean Nida abayas, zardozi metallic threadwork, and bespoke velvet drapes.",
+        badge: "FESTIVE COUTURE 2026",
+        imageUrl: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1920&auto=format&fit=crop",
+        ctaText: "EXPLORE COLLECTION",
+        ctaUrl: "/category/abayas",
         isActive: true,
         order: 1,
         createdAt: "2026-08-01T10:00:00.000Z",
       },
       {
         id: "bnr-2",
-        title: "Pure Medina Silk Luxury Shaylas",
-        subtitle: "Ultra-breathable opaque silk drapes in timeless curated pastels and jewel tones.",
-        badge: "NEW COUTURE ARRIVALS",
-        imageUrl: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1600&auto=format&fit=crop",
-        ctaText: "SHOP HIJABS",
-        ctaUrl: "/shop?category=hijabs",
+        title: "Pakistani Lawn & Anarkali Ensembles",
+        subtitle: "Authentic festive suits with heavy resham embroidery, organza dupattas, and made-to-measure tailored silhouettes.",
+        badge: "PAKISTANI DESIGNER EDIT",
+        imageUrl: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1920&auto=format&fit=crop",
+        ctaText: "SHOP PAKISTANI SUITS",
+        ctaUrl: "/category/pakistani-churidars",
         isActive: true,
         order: 2,
         createdAt: "2026-08-05T10:00:00.000Z",
       },
       {
         id: "bnr-3",
-        title: "Lahore Velvet Festive Ensembles",
-        subtitle: "Opulent raw silk and micro-velvet 3-piece handcrafted designer suits.",
-        badge: "WEDDING & EID FESTIVE",
-        imageUrl: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1600&auto=format&fit=crop",
-        ctaText: "VIEW FESTIVE EDIT",
-        ctaUrl: "/shop?category=pakistani-churidars",
+        title: "Luxury Medina Silk & Chiffon Shaylas",
+        subtitle: "Featherlight, breathable, non-slip luxury hijabs in curated earthy neutrals and regal gem tones.",
+        badge: "MEDINA SILK HERITAGE",
+        imageUrl: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1920&auto=format&fit=crop",
+        ctaText: "DISCOVER HIJABS",
+        ctaUrl: "/category/hijabs",
         isActive: true,
         order: 3,
         createdAt: "2026-08-10T10:00:00.000Z",
@@ -74,10 +74,13 @@ export async function POST(req: Request) {
       badge,
       imageUrl,
       ctaText = "SHOP NOW",
-      ctaUrl = "/shop",
+      ctaUrl,
+      ctaLink,
       isActive = true,
       order = 0,
     } = body;
+
+    const finalCta = (ctaUrl || ctaLink || "/shop").trim();
 
     if (!title || !imageUrl) {
       return NextResponse.json(
@@ -94,7 +97,7 @@ export async function POST(req: Request) {
           badge: badge || "",
           imageUrl: imageUrl.trim(),
           ctaText: ctaText || "SHOP NOW",
-          ctaUrl: ctaUrl || "/shop",
+          ctaUrl: finalCta,
           isActive: Boolean(isActive),
           order: Number(order) || 0,
         },
@@ -106,6 +109,7 @@ export async function POST(req: Request) {
         banner: newBanner,
       });
     } catch (dbErr) {
+      console.warn("DB banner create fallback:", dbErr);
       return NextResponse.json({
         success: true,
         message: "Banner created (simulated mode).",
@@ -116,7 +120,7 @@ export async function POST(req: Request) {
           badge,
           imageUrl,
           ctaText,
-          ctaUrl,
+          ctaUrl: finalCta,
           isActive,
           order,
           createdAt: new Date().toISOString(),

@@ -114,32 +114,40 @@ export default function AdminDashboardPage() {
       title: "Gross Sales Revenue",
       value: stats ? formatPrice(stats.totalRevenue) : "₹5,84,000",
       trend: "+18.4% vs last period",
-      subtext: "Net margins: 64.2%",
+      subtext: "Live revenue snapshot",
       icon: DollarSign,
       color: "text-emerald-700 bg-emerald-50 border-emerald-200",
     },
     {
       title: "Total Orders",
-      value: stats ? stats.totalOrders.toString() : "74",
+      value: stats ? stats.totalOrders.toString() : "42",
       trend: `${stats?.pendingOrders || 8} awaiting dispatch`,
       subtext: "Fulfillment rate: 94%",
       icon: ShoppingBag,
       color: "text-amber-700 bg-amber-50 border-amber-200",
     },
     {
+      title: "Catalog Products",
+      value: stats ? stats.totalProducts.toString() : "16",
+      trend: `${stats?.lowStockCount || 3} low stock items`,
+      subtext: "Live active silhouettes",
+      icon: Package,
+      color: "text-gold-dark bg-gold/10 border-gold/30",
+    },
+    {
       title: "Registered Patrons",
       value: stats ? stats.totalCustomers.toString() : "128",
-      trend: "+12 new this week",
-      subtext: "Retention rate: 42%",
+      trend: "+12 new patrons",
+      subtext: "VIP loyalty members",
       icon: Users,
       color: "text-purple-700 bg-purple-50 border-purple-200",
     },
     {
-      title: "Pending Deliveries",
-      value: `${stats?.pendingOrders || 8}`,
-      trend: "Shiprocket BlueDart Manifested",
-      subtext: "Avg delivery: 2.8 days",
-      icon: Truck,
+      title: "Active Promotions",
+      value: stats ? `${stats.activeCoupons || 4} Coupons` : "4 Coupons",
+      trend: "Discounts live",
+      subtext: "Cart incentives active",
+      icon: TicketPercent,
       color: "text-blue-700 bg-blue-50 border-blue-200",
     },
   ];
@@ -177,35 +185,35 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 5 Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {kpis.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
             <div
               key={idx}
-              className="bg-white border border-canvas-border p-5 rounded-xs shadow-xs space-y-3"
+              className="bg-white border border-canvas-border p-4 rounded-xs shadow-xs space-y-2.5 flex flex-col justify-between"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] uppercase tracking-wider text-charcoal/60 font-semibold">
+                <span className="text-[10px] uppercase tracking-wider text-charcoal/60 font-semibold">
                   {kpi.title}
                 </span>
-                <div className={`p-2 border rounded-xs ${kpi.color}`}>
-                  <Icon className="w-4 h-4" />
+                <div className={`p-1.5 border rounded-xs ${kpi.color}`}>
+                  <Icon className="w-3.5 h-3.5" />
                 </div>
               </div>
 
               <div>
-                <div className="text-2xl font-bold text-charcoal tracking-tight">
+                <div className="text-xl font-bold text-charcoal tracking-tight">
                   {kpi.value}
                 </div>
-                <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
                   <ArrowUpRight className="w-3 h-3 shrink-0" />
                   {kpi.trend}
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-canvas-border/60 text-[10px] text-charcoal/50 font-mono">
+              <div className="pt-2 border-t border-canvas-border/60 text-[9px] text-charcoal/50 font-mono">
                 {kpi.subtext}
               </div>
             </div>
@@ -298,126 +306,169 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Bestselling Silhouettes Widget */}
-        <div className="bg-white border border-canvas-border p-6 rounded-xs shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-canvas-border pb-3">
-            <div>
-              <span className="text-[10px] uppercase tracking-widest text-gold-dark font-semibold">
-                TOP SILHOUETTES
-              </span>
+        <div className="bg-white border border-canvas-border p-6 rounded-xs shadow-xs space-y-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-canvas-border pb-3">
               <h2 className="font-editorial-heading text-lg text-charcoal">
-                Bestselling Catalog
+                Bestselling Silhouettes
               </h2>
+              <span className="text-[10px] font-mono uppercase text-gold-dark font-semibold">
+                Top Performers
+              </span>
             </div>
-            <Link
-              href="/admin/products"
-              className="text-[11px] text-gold-dark underline uppercase tracking-wider font-semibold"
-            >
-              All Items
-            </Link>
-          </div>
 
-          <div className="space-y-3.5">
-            {bestselling.map((prod, i) => (
-              <div key={i} className="flex items-center gap-3 text-xs">
-                <div className="relative w-12 h-14 bg-cream-100 border border-canvas-border shrink-0 overflow-hidden">
-                  <Image
-                    src={prod.image}
-                    alt={prod.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-charcoal truncate">
-                    {prod.name}
-                  </p>
-                  <p className="text-[10px] text-charcoal/50">{prod.category}</p>
-                  <p className="text-[11px] font-mono font-bold text-charcoal mt-0.5">
-                    {formatPrice(prod.revenue)}{" "}
-                    <span className="text-[10px] font-normal text-emerald-700">
-                      ({prod.sales})
+            <div className="divide-y divide-canvas-border/60 mt-3">
+              {bestselling.map((item, idx) => (
+                <div key={idx} className="py-3 flex items-center gap-3">
+                  <div className="w-10 h-12 bg-cream-100 shrink-0 border border-canvas-border relative overflow-hidden">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-charcoal truncate">
+                      {item.name}
+                    </p>
+                    <p className="text-[10px] text-charcoal/50">
+                      {item.category} • {item.sales}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-bold font-mono text-charcoal">
+                      {formatPrice(item.revenue)}
+                    </p>
+                    <span className="text-[9px] font-bold text-emerald-700 font-mono">
+                      {item.growth}
                     </span>
-                  </p>
+                  </div>
                 </div>
-
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 border border-emerald-200">
-                  {prod.growth}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+
+          <Link
+            href="/admin/products"
+            className="text-xs text-center uppercase tracking-wider font-semibold text-charcoal hover:text-gold-dark transition-colors pt-3 border-t border-canvas-border block"
+          >
+            View Complete Catalog →
+          </Link>
         </div>
       </div>
 
-      {/* Recent Orders Pipeline Table */}
-      <div className="bg-white border border-canvas-border p-6 rounded-xs shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-canvas-border pb-3">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-4 h-4 text-gold-dark" />
-            <h2 className="font-editorial-heading text-lg text-charcoal">
-              Live Order Pipeline & Dispatches
-            </h2>
+      {/* Two Column Grid: Recent Orders & Inventory Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Orders Pipeline */}
+        <div className="lg:col-span-2 bg-white border border-canvas-border p-6 rounded-xs shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-canvas-border pb-3">
+            <div>
+              <span className="text-[10px] uppercase tracking-widest text-gold-dark font-semibold">
+                DISPATCH PIPELINE
+              </span>
+              <h2 className="font-editorial-heading text-lg text-charcoal">
+                Recent Orders Awaiting Dispatch
+              </h2>
+            </div>
+            <Link
+              href="/admin/orders"
+              className="text-xs text-gold-dark hover:text-charcoal font-semibold uppercase tracking-wider flex items-center gap-1"
+            >
+              All Orders ({stats?.totalOrders || 42}) →
+            </Link>
           </div>
-          <Link
-            href="/admin/orders"
-            className="text-xs uppercase tracking-widest text-gold-dark hover:underline font-semibold flex items-center gap-1"
-          >
-            Manage All Orders <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-canvas-border text-[10px] text-charcoal/50 uppercase tracking-wider">
+                  <th className="pb-2">Order #</th>
+                  <th className="pb-2">Patron</th>
+                  <th className="pb-2">Amount</th>
+                  <th className="pb-2">Payment</th>
+                  <th className="pb-2">Fulfillment</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-canvas-border/50">
+                {(stats?.recentOrders || []).map((ord: any) => (
+                  <tr key={ord.id} className="hover:bg-cream-50 transition-colors">
+                    <td className="py-3 font-mono font-semibold text-charcoal">
+                      {ord.orderNumber}
+                    </td>
+                    <td className="py-3">
+                      <p className="font-medium text-charcoal">{ord.customerName}</p>
+                      <p className="text-[10px] text-charcoal/50">{ord.customerEmail}</p>
+                    </td>
+                    <td className="py-3 font-mono font-bold text-charcoal">
+                      {formatPrice(ord.total)}
+                    </td>
+                    <td className="py-3">
+                      <span className="px-2 py-0.5 bg-cream-100 border border-canvas-border text-[9px] uppercase font-bold">
+                        {ord.paymentMethod} • {ord.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      <span
+                        className={`px-2 py-0.5 text-[9px] uppercase font-bold border ${
+                          ord.orderStatus === "DELIVERED"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : ord.orderStatus === "SHIPPED"
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        {ord.orderStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-canvas-border text-charcoal/50 uppercase tracking-widest text-[11px]">
-                <th className="py-3 px-3">Order Number</th>
-                <th className="py-3 px-3">Patron Name</th>
-                <th className="py-3 px-3">Amount</th>
-                <th className="py-3 px-3">Payment</th>
-                <th className="py-3 px-3">Logistics Status</th>
-                <th className="py-3 px-3 text-right">Quick Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-canvas-border">
-              {(stats?.recentOrders || []).map((order: any) => (
-                <tr key={order.id} className="hover:bg-cream-50 transition-colors">
-                  <td className="py-3 px-3 font-mono font-bold text-charcoal">
-                    <Link
-                      href="/admin/orders"
-                      className="hover:underline text-gold-dark"
-                    >
-                      {order.orderNumber}
-                    </Link>
-                  </td>
-                  <td className="py-3 px-3 font-semibold text-charcoal">
-                    {order.customerName}
-                  </td>
-                  <td className="py-3 px-3 font-bold text-charcoal">
-                    {formatPrice(order.total)}
-                  </td>
-                  <td className="py-3 px-3">
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] uppercase font-bold">
-                      {order.paymentMethod} • {order.paymentStatus}
+        {/* Low Stock Alerts */}
+        <div className="bg-white border border-canvas-border p-6 rounded-xs shadow-xs space-y-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-canvas-border pb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <h2 className="font-editorial-heading text-lg text-charcoal">
+                  Low Stock Alerts
+                </h2>
+              </div>
+              <span className="text-[10px] font-mono uppercase bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 font-bold">
+                Action Required
+              </span>
+            </div>
+
+            <div className="divide-y divide-canvas-border/60 mt-3 space-y-1">
+              {(stats?.lowStockProducts || []).map((item: any) => (
+                <div key={item.id} className="py-2.5 flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-semibold text-charcoal truncate max-w-[170px]">
+                      {item.name}
+                    </p>
+                    <p className="text-[10px] font-mono text-charcoal/50">
+                      Size {item.size} • {item.color}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 font-mono font-bold text-[10px]">
+                      Only {item.stock} left
                     </span>
-                  </td>
-                  <td className="py-3 px-3">
-                    <span className="px-2 py-0.5 bg-cream-200 text-charcoal border border-canvas-border text-[10px] uppercase font-semibold">
-                      {order.orderStatus}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    <Link
-                      href="/admin/orders"
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-charcoal text-white text-[11px] uppercase tracking-wider hover:bg-black rounded-xs"
-                    >
-                      Inspect Order
-                    </Link>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          <Link
+            href="/admin/products"
+            className="text-xs text-center uppercase tracking-wider font-semibold text-charcoal hover:text-gold-dark transition-colors pt-3 border-t border-canvas-border block"
+          >
+            Manage Stock Inventory →
+          </Link>
         </div>
       </div>
     </div>

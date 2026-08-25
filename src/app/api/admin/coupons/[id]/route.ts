@@ -77,6 +77,12 @@ export async function DELETE(
 ) {
   try {
     try {
+      // 1. Delete associated coupon usage rows to prevent Foreign Key errors
+      await prisma.couponUsage.deleteMany({
+        where: { couponId: params.id },
+      });
+
+      // 2. Delete the coupon
       await prisma.coupon.delete({
         where: { id: params.id },
       });

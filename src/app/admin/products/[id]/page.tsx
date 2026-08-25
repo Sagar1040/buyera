@@ -10,9 +10,11 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { ImageUploadDropzone } from "@/components/admin/ImageUploadDropzone";
 
 const COMMON_SIZES = ["52", "54", "56", "58", "60", "XS", "S", "M", "L", "XL", "Standard"];
 
@@ -77,8 +79,21 @@ export default function AdminEditProductPage() {
             isNew: Boolean(p.isNew),
             isBestSeller: Boolean(p.isBestSeller),
           });
-          setImages(p.images?.map((img: any) => img.url) || []);
-          setVariants(p.variants || []);
+
+          // Process images
+          const fetchedImages = p.images?.map((img: any) =>
+            typeof img === "string" ? img : img.url
+          ) || [];
+          setImages(
+            fetchedImages.length > 0
+              ? fetchedImages
+              : p.image
+              ? [p.image]
+              : [""]
+          );
+
+          // Process variants
+          setVariants(p.variants && p.variants.length > 0 ? p.variants : []);
         }
       } catch (err: any) {
         setError(err.message || "Failed to load product.");
@@ -87,10 +102,21 @@ export default function AdminEditProductPage() {
       }
     };
 
-    fetchData();
+    if (productId) {
+      fetchData();
+    }
   }, [productId]);
 
   const handleAddImage = () => setImages((prev) => [...prev, ""]);
+  
+  const handleUpdateImage = (index: number, url: string) => {
+    setImages((prev) => {
+      const next = [...prev];
+      next[index] = url;
+      return next;
+    });
+  };
+
   const handleRemoveImage = (index: number) =>
     setImages((prev) => prev.filter((_, i) => i !== index));
 
@@ -103,7 +129,7 @@ export default function AdminEditProductPage() {
         color: "Midnight Black",
         colorHex: "#121212",
         stock: 10,
-        sku: `${formData.sku}-NEW`,
+        sku: `${formData.sku || "BUY"}-NEW`,
       },
     ]);
   };
@@ -188,9 +214,10 @@ export default function AdminEditProductPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* 1. Basic Details */}
         <div className="bg-white border border-canvas-border p-6 shadow-xs space-y-4">
           <h2 className="font-editorial-heading text-lg text-charcoal border-b border-canvas-border pb-2">
-            Product Attributes
+            1. Product Attributes
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -291,13 +318,82 @@ export default function AdminEditProductPage() {
               className="w-full border border-canvas-border p-2.5 text-xs text-charcoal focus:outline-none focus:border-gold"
             />
           </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal">
+              Tags (Comma separated)
+            </label>
+            <input
+              type="text"
+              value={formData.tags}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, tags: e.target.value }))
+              }
+              className="w-full border border-canvas-border p-2.5 text-xs text-charcoal focus:outline-none focus:border-gold"
+            />
+          </div>
         </div>
 
-        {/* Variants Matrix */}
+        {/* 2. Image Gallery & Direct Upload Section */}
+        <div className="bg-white border border-canvas-border p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-canvas-border pb-2">
+            <div>
+              <h2 className="font-editorial-heading text-lg text-charcoal">
+                2. Product Image Gallery & Direct Upload
+              </h2>
+              <p className="text-[11px] text-charcoal/50">
+                Upload new photos directly from your device or provide external URLs.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddImage}
+              className="text-xs"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" /> Add Image Slot
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {images.map((img, idx) => (
+              <div
+                key={idx}
+                className="p-3 border border-canvas-border/80 bg-cream-50/30 rounded-xs space-y-2 relative"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-gold-dark">
+                    {idx === 0 ? "★ Primary Cover" : `Gallery Photo #${idx + 1}`}
+                  </span>
+                  {images.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(idx)}
+                      className="p-1 text-rose-600 hover:text-rose-800"
+                      title="Remove image"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <ImageUploadDropzone
+                  value={img}
+                  onChange={(newUrl) => handleUpdateImage(idx, newUrl)}
+                  label=""
+                  aspectRatio="product"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 3. Variants Matrix */}
         <div className="bg-white border border-canvas-border p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-canvas-border pb-2">
             <h2 className="font-editorial-heading text-lg text-charcoal">
-              Variants & Stock Levels
+              3. Variants & Stock Levels
             </h2>
             <Button
               type="button"
@@ -401,10 +497,10 @@ export default function AdminEditProductPage() {
           </div>
         </div>
 
-        {/* Display Flags */}
+        {/* 4. Display Flags */}
         <div className="bg-white border border-canvas-border p-6 shadow-xs space-y-4">
           <h2 className="font-editorial-heading text-lg text-charcoal border-b border-canvas-border pb-2">
-            Visibility & Flags
+            4. Visibility & Flags
           </h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
