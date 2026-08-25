@@ -393,12 +393,12 @@ export function Navbar() {
 
                       {session.user.role === "ADMIN" && (
                         <Link
-                          href="/admin/orders"
+                          href="/admin"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-charcoal hover:bg-cream-50 hover:text-gold transition-colors"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-charcoal hover:bg-cream-50 hover:text-gold transition-colors font-semibold"
                         >
                           <Shield className="w-4 h-4 text-gold-dark" />
-                          Admin Orders Portal
+                          Admin Control Suite
                         </Link>
                       )}
 
@@ -617,11 +617,11 @@ export function Navbar() {
                 </Link>
                 {session.user.role === "ADMIN" && (
                   <Link
-                    href="/admin/orders"
+                    href="/admin"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block text-xs uppercase tracking-widest text-gold-dark font-medium py-1"
+                    className="block text-xs uppercase tracking-widest text-gold-dark font-semibold py-1"
                   >
-                    Admin Orders Portal
+                    Admin Control Suite
                   </Link>
                 )}
                 <button

@@ -74,7 +74,6 @@ export function Footer() {
               <li><Link href="/account" className="hover:text-gold transition-colors">Shipping & Returns</Link></li>
               <li><Link href="/wishlist" className="hover:text-gold transition-colors">Saved Silhouettes</Link></li>
               <li><Link href="/cart" className="hover:text-gold transition-colors">Shopping Bag</Link></li>
-              <li><Link href="/admin" className="hover:text-gold transition-colors">Staff Portal</Link></li>
             </ul>
           </div>
 
