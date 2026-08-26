@@ -1,7 +1,4 @@
-"use client";
-
-import React from "react";
-import Link from "next/link";
+import { useSettings } from "@/context/SettingsContext";
 
 interface LogoProps {
   variant?: "full" | "icon";
@@ -16,6 +13,7 @@ export function Logo({
   size = "md",
   showTagline = false,
 }: LogoProps) {
+  const { settings } = useSettings();
   const heights = {
     sm: "h-7",
     md: "h-9 sm:h-10",
@@ -168,7 +166,7 @@ export function Logo({
 
       {showTagline && (
         <span className="text-[9px] uppercase tracking-[0.3em] text-charcoal/60 font-sans font-medium pl-1 -mt-1">
-          Elegance • Modesty • You
+          {settings.siteTagline || "Elegance • Modesty • You"}
         </span>
       )}
     </div>

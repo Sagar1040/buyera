@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
+import { useSettings } from "@/context/SettingsContext";
 import { Logo } from "@/components/ui/Logo";
 
 // 1. Dynamic Script Injection Helper
@@ -71,9 +72,18 @@ export default function CheckoutPage() {
     pinCode: "560034",
   });
 
+  const { settings } = useSettings();
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [paymentChoice, setPaymentChoice] = useState<"RAZORPAY" | "COD">("RAZORPAY");
+
+  useEffect(() => {
+    if (!settings.enableRazorpay && settings.enableCOD) {
+      setPaymentChoice("COD");
+    } else if (settings.enableRazorpay && !settings.enableCOD) {
+      setPaymentChoice("RAZORPAY");
+    }
+  }, [settings.enableRazorpay, settings.enableCOD]);
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -544,82 +554,92 @@ export default function CheckoutPage() {
                 </h2>
               </div>
 
-              {/* Dual Payment Options */}
+              {/* Dynamic Payment Options */}
               <div className="space-y-4">
                 {/* Option 1: Razorpay Online */}
-                <div
-                  onClick={() => setPaymentChoice("RAZORPAY")}
-                  className={`cursor-pointer p-5 border transition-all flex items-start justify-between ${
-                    paymentChoice === "RAZORPAY"
-                      ? "border-charcoal bg-cream-50/70 shadow-sm"
-                      : "border-canvas-border bg-white hover:border-gold/50"
-                  }`}
-                >
-                  <div className="flex items-start gap-3.5">
-                    <div
-                      className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 ${
-                        paymentChoice === "RAZORPAY"
-                          ? "border-charcoal bg-charcoal text-white"
-                          : "border-charcoal/40"
-                      }`}
-                    >
-                      {paymentChoice === "RAZORPAY" && (
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      )}
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="w-4 h-4 text-gold-dark" />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-charcoal">
-                          Pay Online via Razorpay
-                        </span>
-                        <span className="text-[9px] uppercase font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200">
-                          RECOMMENDED
-                        </span>
+                {settings.enableRazorpay && (
+                  <div
+                    onClick={() => setPaymentChoice("RAZORPAY")}
+                    className={`cursor-pointer p-5 border transition-all flex items-start justify-between ${
+                      paymentChoice === "RAZORPAY"
+                        ? "border-charcoal bg-cream-50/70 shadow-sm"
+                        : "border-canvas-border bg-white hover:border-gold/50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3.5">
+                      <div
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 ${
+                          paymentChoice === "RAZORPAY"
+                            ? "border-charcoal bg-charcoal text-white"
+                            : "border-charcoal/40"
+                        }`}
+                      >
+                        {paymentChoice === "RAZORPAY" && (
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        )}
                       </div>
-                      <p className="text-xs text-charcoal/60 font-light">
-                        Instant confirmation via UPI (Google Pay, PhonePe, Paytm, CRED), NetBanking, or Debit/Credit Cards.
-                      </p>
+
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="w-4 h-4 text-gold-dark" />
+                          <span className="text-xs font-semibold uppercase tracking-wider text-charcoal">
+                            Pay Online via Razorpay
+                          </span>
+                          <span className="text-[9px] uppercase font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200">
+                            RECOMMENDED
+                          </span>
+                        </div>
+                        <p className="text-xs text-charcoal/60 font-light">
+                          Instant confirmation via UPI (Google Pay, PhonePe, Paytm, CRED), NetBanking, or Debit/Credit Cards.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Option 2: Cash on Delivery */}
-                <div
-                  onClick={() => setPaymentChoice("COD")}
-                  className={`cursor-pointer p-5 border transition-all flex items-start justify-between ${
-                    paymentChoice === "COD"
-                      ? "border-charcoal bg-cream-50/70 shadow-sm"
-                      : "border-canvas-border bg-white hover:border-gold/50"
-                  }`}
-                >
-                  <div className="flex items-start gap-3.5">
-                    <div
-                      className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 ${
-                        paymentChoice === "COD"
-                          ? "border-charcoal bg-charcoal text-white"
-                          : "border-charcoal/40"
-                      }`}
-                    >
-                      {paymentChoice === "COD" && (
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      )}
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Banknote className="w-4 h-4 text-emerald-700" />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-charcoal">
-                          Cash on Delivery (COD)
-                        </span>
+                {settings.enableCOD && (
+                  <div
+                    onClick={() => setPaymentChoice("COD")}
+                    className={`cursor-pointer p-5 border transition-all flex items-start justify-between ${
+                      paymentChoice === "COD"
+                        ? "border-charcoal bg-cream-50/70 shadow-sm"
+                        : "border-canvas-border bg-white hover:border-gold/50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3.5">
+                      <div
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 ${
+                          paymentChoice === "COD"
+                            ? "border-charcoal bg-charcoal text-white"
+                            : "border-charcoal/40"
+                        }`}
+                      >
+                        {paymentChoice === "COD" && (
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        )}
                       </div>
-                      <p className="text-xs text-charcoal/60 font-light">
-                        Pay with cash upon delivery at your doorstep. Please keep exact cash ready during delivery.
-                      </p>
+
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Banknote className="w-4 h-4 text-emerald-700" />
+                          <span className="text-xs font-semibold uppercase tracking-wider text-charcoal">
+                            Cash on Delivery (COD)
+                          </span>
+                        </div>
+                        <p className="text-xs text-charcoal/60 font-light">
+                          Pay with cash upon delivery at your doorstep. Please keep exact cash ready during delivery.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {!settings.enableRazorpay && !settings.enableCOD && (
+                  <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl">
+                    Online payments are temporarily offline for atelier maintenance. Please contact support.
+                  </div>
+                )}
               </div>
 
               {step === 2 && (

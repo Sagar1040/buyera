@@ -29,13 +29,13 @@ interface HeroSlide {
 const DEFAULT_SLIDES: HeroSlide[] = [
   {
     id: "default-1",
-    tag: "HAUTE MODESTY ATELIER",
+    tag: "✦ Handcrafted Everyday Elegance",
     badge: "FESTIVE COUTURE 2026",
     title: "Timeless Modesty. Artisanal Luxury.",
     subtitle:
       "Handcrafted Korean Nida abayas, intricate zardozi metallic threadwork, and bespoke velvet silhouettes created for the modern woman.",
-    ctaPrimary: { text: "EXPLORE THE ATELIER", href: "/category/abayas" },
-    ctaSecondary: { text: "NEW ARRIVALS", href: "/shop?sort=newest" },
+    ctaPrimary: { text: "Shop New Arrivals", href: "/shop?sort=newest" },
+    ctaSecondary: { text: "Explore Collection", href: "/category/abayas" },
     image:
       "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200&auto=format&fit=crop",
     highlightReview: {
@@ -45,13 +45,13 @@ const DEFAULT_SLIDES: HeroSlide[] = [
   },
   {
     id: "default-2",
-    tag: "PAKISTANI DESIGNER EDIT",
-    badge: "CUSTOM TAILORING",
+    tag: "✦ Handcrafted Everyday Elegance",
+    badge: "PAKISTANI DESIGNER EDIT",
     title: "Poetic Silhouettes & Resham Embroidery",
     subtitle:
       "Authentic festive Pakistani ensembles, pure lawn drapes, and handcrafted organza dupattas tailored to your precise measurements.",
-    ctaPrimary: { text: "SHOP PAKISTANI SUITS", href: "/category/pakistani-churidars" },
-    ctaSecondary: { text: "VIEW ANARKALIS", href: "/category/islamic-dresses" },
+    ctaPrimary: { text: "Shop New Arrivals", href: "/shop?sort=newest" },
+    ctaSecondary: { text: "Explore Collection", href: "/category/pakistani-churidars" },
     image:
       "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1200&auto=format&fit=crop",
     highlightReview: {
@@ -61,13 +61,13 @@ const DEFAULT_SLIDES: HeroSlide[] = [
   },
   {
     id: "default-3",
-    tag: "MEDINA SILK HERITAGE",
+    tag: "✦ Handcrafted Everyday Elegance",
     badge: "SIGNATURE WEAVE",
     title: "Featherlight Silk & Chiffon Drapes",
     subtitle:
       "Signature non-slip, breathable Medina Silk shaylas in curated warm sand, desert rose, and regal gemstone palettes.",
-    ctaPrimary: { text: "DISCOVER HIJABS", href: "/category/hijabs" },
-    ctaSecondary: { text: "VIEW BOX SETS", href: "/category/hijabs?tag=box-set" },
+    ctaPrimary: { text: "Shop New Arrivals", href: "/shop?sort=newest" },
+    ctaSecondary: { text: "Explore Collection", href: "/category/hijabs" },
     image:
       "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1200&auto=format&fit=crop",
     highlightReview: {
@@ -93,19 +93,19 @@ export function HeroBanner() {
           if (activeBanners.length > 0) {
             const mappedSlides: HeroSlide[] = activeBanners.map((b: any, idx: number) => ({
               id: b.id || `banner-${idx}`,
-              tag: b.badge || "EXCLUSIVE ATELIER",
-              badge: "HAUTE COUTURE",
+              tag: "✦ Handcrafted Everyday Elegance",
+              badge: b.badge || "HAUTE COUTURE",
               title: b.title,
               subtitle:
                 b.subtitle ||
                 "Exquisite handcrafted silhouettes tailored with artisanal mastery.",
               ctaPrimary: {
-                text: b.ctaText || "EXPLORE COLLECTION",
-                href: b.ctaUrl || b.ctaLink || "/shop",
+                text: "Shop New Arrivals",
+                href: "/shop?sort=newest",
               },
               ctaSecondary: {
-                text: "DISCOVER NEW",
-                href: "/shop?sort=newest",
+                text: "Explore Collection",
+                href: b.ctaUrl || b.ctaLink || "/shop",
               },
               image: b.imageUrl,
               highlightReview: DEFAULT_SLIDES[idx % DEFAULT_SLIDES.length].highlightReview,
@@ -141,38 +141,24 @@ export function HeroBanner() {
 
   return (
     <section
-      className="relative w-full overflow-hidden bg-cream py-10 sm:py-16 lg:py-20 border-b border-stoneBorder/60 select-none"
+      className="relative w-full overflow-hidden bg-cream bg-aramya-pattern py-10 sm:py-16 lg:py-20 border-b border-aramyaBorder select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* 1. Subtle Luxury Background Gradient Blobs & Geometric Accents */}
-      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-blush/80 via-cream-200/50 to-transparent rounded-full blur-3xl pointer-events-none -translate-y-1/3 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-gradient-to-tr from-sage/70 via-cream-100/40 to-transparent rounded-full blur-3xl pointer-events-none translate-y-1/4 -translate-x-1/4" />
-
-      {/* Decorative Vector Arch Silhouette Watermark */}
-      <svg
-        className="absolute top-1/2 right-10 -translate-y-1/2 w-96 h-96 text-stoneBorder/30 pointer-events-none hidden xl:block"
-        viewBox="0 0 200 200"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1"
-      >
-        <path d="M 30,190 V 90 A 70,70 0 0,1 170,90 V 190" />
-        <path d="M 50,190 V 95 A 50,50 0 0,1 150,95 V 190" strokeDasharray="3 3" />
-        <circle cx="100" cy="90" r="15" />
-      </svg>
+      {/* Soft Ambient Glows */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-terracotta-50 via-cream-100 to-transparent rounded-full blur-3xl pointer-events-none -translate-y-1/3 translate-x-1/4" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-gradient-to-tr from-olive-50 via-cream-100 to-transparent rounded-full blur-3xl pointer-events-none translate-y-1/4 -translate-x-1/4" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-          {/* Left Column: Magazine Editorial Content */}
+          {/* Left Column: Editorial Content */}
           <div className="lg:col-span-7 space-y-6 text-charcoal">
-            {/* Top Badges */}
+            {/* Tagline Badge */}
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-white/80 backdrop-blur-md text-charcoal text-[10px] uppercase font-bold tracking-[0.2em] rounded-full border border-stoneBorder shadow-soft">
-                <Sparkles className="w-3 h-3 text-gold" />
+              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white text-terracotta text-[10px] uppercase font-bold tracking-[0.2em] rounded-full border border-aramyaBorder shadow-xs">
                 {activeSlide.tag}
               </span>
-              <span className="px-3 py-1 bg-gold/15 text-gold-dark text-[10px] font-semibold uppercase tracking-widest rounded-full border border-gold/30">
+              <span className="px-3 py-1 bg-olive-50 text-olive-600 text-[10px] font-semibold uppercase tracking-widest rounded-full border border-olive-100">
                 {activeSlide.badge}
               </span>
             </div>
@@ -187,10 +173,10 @@ export function HeroBanner() {
               {activeSlide.subtitle}
             </p>
 
-            {/* Dual Pill Action CTAs */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            {/* Dual CTAs: Solid Terracotta & Warm Outline */}
+            <div className="flex flex-wrap items-center gap-3.5 pt-2">
               <Link href={activeSlide.ctaPrimary.href}>
-                <button className="btn-aramya-primary group">
+                <button className="btn-aramya-terracotta group">
                   <span>{activeSlide.ctaPrimary.text}</span>
                   <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                 </button>
@@ -204,22 +190,22 @@ export function HeroBanner() {
               )}
             </div>
 
-            {/* Trust Metrics & Guarantees */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6 border-t border-stoneBorder/70 text-[11px] text-charcoal/70">
+            {/* Trust Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6 border-t border-aramyaBorder text-[11px] text-charcoal/70">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-stoneBorder text-gold shadow-xs">
+                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-aramyaBorder text-terracotta shadow-xs">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
-                <span>Grade-A Korean Nida</span>
+                <span>100% Pure Fabrics</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-stoneBorder text-gold shadow-xs">
+                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-aramyaBorder text-terracotta shadow-xs">
                   <Scissors className="w-4 h-4" />
                 </div>
                 <span>Custom Made-to-Measure</span>
               </div>
               <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
-                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-stoneBorder text-gold shadow-xs">
+                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-aramyaBorder text-terracotta shadow-xs">
                   <Award className="w-4 h-4" />
                 </div>
                 <span>50,000+ Dressed</span>
@@ -227,11 +213,11 @@ export function HeroBanner() {
             </div>
           </div>
 
-          {/* Right Column: Editorial Arched Portrait Showcase */}
+          {/* Right Column: Editorial Arched Frame Lookbook Image */}
           <div className="lg:col-span-5 relative">
             <div className="relative mx-auto max-w-sm lg:max-w-none">
-              {/* Arched Photo Frame */}
-              <div className="relative aspect-[3/4] w-full rounded-t-[10rem] rounded-b-3xl overflow-hidden bg-cream-200 border-2 border-stoneBorder shadow-luxury-lg">
+              {/* Arched Photo Frame (rounded-t-full / rounded-3xl) */}
+              <div className="relative aspect-[3/4] w-full rounded-t-full rounded-b-3xl overflow-hidden bg-cream-200 border-2 border-aramyaBorder shadow-luxury-lg">
                 <img
                   key={activeSlide.id}
                   src={activeSlide.image}
@@ -241,18 +227,18 @@ export function HeroBanner() {
                     (e.target as HTMLElement).style.display = "none";
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/50 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent" />
               </div>
 
-              {/* Floating Aesthetic Top Badge */}
-              <div className="absolute -top-3 -left-3 sm:-left-6 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-stoneBorder shadow-soft flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-charcoal font-semibold animate-float">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Bespoke 2026 Collection</span>
+              {/* Floating Top Badge */}
+              <div className="absolute top-6 -left-3 sm:-left-6 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-aramyaBorder shadow-soft flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-charcoal font-semibold animate-float">
+                <span className="w-2 h-2 rounded-full bg-terracotta animate-pulse" />
+                <span>Spring / Eid Edit</span>
               </div>
 
-              {/* Floating Aesthetic Review Card */}
+              {/* Floating Review Card */}
               {activeSlide.highlightReview && (
-                <div className="absolute -bottom-5 -right-3 sm:-right-6 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-stoneBorder shadow-luxury max-w-[220px] sm:max-w-[240px] space-y-1 animate-fadeIn">
+                <div className="absolute -bottom-4 -right-3 sm:-right-6 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-aramyaBorder shadow-luxury max-w-[220px] sm:max-w-[240px] space-y-1 animate-fadeIn">
                   <div className="flex items-center gap-1 text-gold">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} className="w-3 h-3 fill-current" />
@@ -261,17 +247,16 @@ export function HeroBanner() {
                   <p className="text-[10px] text-charcoal/80 font-light italic leading-snug">
                     "{activeSlide.highlightReview.text}"
                   </p>
-                  <p className="text-[9px] uppercase tracking-wider text-charcoal/50 font-bold">
+                  <p className="text-[9px] uppercase tracking-wider text-terracotta font-bold">
                     — {activeSlide.highlightReview.author}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Slider Navigation Arrows & Indicators */}
+            {/* Slider Navigation Controls */}
             {slides.length > 1 && (
               <div className="flex items-center justify-between mt-8 pt-2">
-                {/* Indicators */}
                 <div className="flex items-center gap-2">
                   {slides.map((_, idx) => (
                     <button
@@ -280,26 +265,25 @@ export function HeroBanner() {
                       aria-label={`Go to slide ${idx + 1}`}
                       className={`h-1.5 rounded-full transition-all duration-300 ${
                         currentSlide === idx
-                          ? "w-8 bg-charcoal"
-                          : "w-2 bg-stoneBorder hover:bg-charcoal/40"
+                          ? "w-8 bg-terracotta"
+                          : "w-2 bg-aramyaBorder hover:bg-charcoal/40"
                       }`}
                     />
                   ))}
                 </div>
 
-                {/* Left/Right Pill Buttons */}
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handlePrev}
                     aria-label="Previous Slide"
-                    className="w-8 h-8 rounded-full bg-white border border-stoneBorder text-charcoal hover:bg-charcoal hover:text-white flex items-center justify-center transition-all shadow-xs"
+                    className="w-8 h-8 rounded-full bg-white border border-aramyaBorder text-charcoal hover:bg-terracotta hover:text-white flex items-center justify-center transition-all shadow-xs"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={handleNext}
                     aria-label="Next Slide"
-                    className="w-8 h-8 rounded-full bg-white border border-stoneBorder text-charcoal hover:bg-charcoal hover:text-white flex items-center justify-center transition-all shadow-xs"
+                    className="w-8 h-8 rounded-full bg-white border border-aramyaBorder text-charcoal hover:bg-terracotta hover:text-white flex items-center justify-center transition-all shadow-xs"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>

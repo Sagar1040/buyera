@@ -5,6 +5,7 @@ import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Providers } from "@/components/Providers";
+import { WhatsAppWidget } from "@/components/ui/WhatsAppWidget";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -63,6 +64,7 @@ export default function RootLayout({
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
+          <WhatsAppWidget />
         </Providers>
       </body>
     </html>

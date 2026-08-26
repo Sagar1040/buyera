@@ -30,22 +30,44 @@ const config: Config = {
           200: "#1E1E1E",
           300: "#1A1A1A",
           400: "#161616",
-          DEFAULT: "#1C1C1C", // Refined Brand Black
+          DEFAULT: "#1E1E1E", // Aramya Signature Charcoal
           900: "#0D0D0D",
           950: "#080808",
         },
-        // Warm Aramya Neutral Palette (Porcelain, Cream, Linen, Sand, Blush, Sage)
-        warmBeige: "#FDFBF7",
+        // Aramya Signature Earthy Terracotta / Rust
+        terracotta: {
+          50: "#FAF3F0",
+          100: "#F5E4DE",
+          200: "#EBCCBF",
+          300: "#DCAB9B",
+          400: "#C47960",
+          DEFAULT: "#A34828", // Primary Earthy Accent
+          600: "#8F3D20",
+          700: "#75321A",
+          800: "#5D2613",
+        },
+        // Aramya Warm Olive
+        olive: {
+          50: "#F4F6F3",
+          100: "#E6EBE4",
+          200: "#D0DCD0",
+          300: "#A8BEA7",
+          DEFAULT: "#5B6B50", // Warm Olive Accent
+          600: "#4B5942",
+          700: "#3D4836",
+        },
+        // Aramya Warm Organic Cream & Sand
         cream: {
-          50: "#FDFCF9",
-          DEFAULT: "#FAF7F2", // Core Aramya Cream Canvas
-          100: "#F5F0EB",
-          200: "#EFE9E1",
-          300: "#E6DDCE",
-          400: "#D8CBBA",
+          50: "#FDFBF7",
+          DEFAULT: "#FBF9F5", // Aramya Primary Background
+          100: "#F5EFEB", // Aramya Sand
+          200: "#EFE8DE", // Aramya Subtle Border
+          300: "#E4D9C7",
+          400: "#D6C6AE",
           500: "#C4AF90",
         },
-        softSand: "#EFE9E1",
+        softSand: "#F5EFEB",
+        aramyaBorder: "#EFE8DE",
         blush: {
           50: "#FCF8F6",
           DEFAULT: "#F9F1ED",
@@ -58,14 +80,14 @@ const config: Config = {
           100: "#DBE2D9",
           200: "#C1CEC0",
         },
-        stoneBorder: "#E8E2D9",
+        stoneBorder: "#EFE8DE",
         // Muted Luxury Gold Accent Palette
         gold: {
           50: "#FAF6EF",
           100: "#F0E7D4",
           200: "#E3CEAA",
           300: "#D5B682",
-          DEFAULT: "#C5A880", // Primary Accent Muted Gold
+          DEFAULT: "#C5A880",
           500: "#B89667",
           600: "#A38051",
           700: "#86663E",
@@ -74,9 +96,9 @@ const config: Config = {
         },
         // Off-White Background Canvas
         canvas: {
-          DEFAULT: "#FAF7F2",
-          subtle: "#F5F0EB",
-          border: "#E8E2D9",
+          DEFAULT: "#FBF9F5",
+          subtle: "#F5EFEB",
+          border: "#EFE8DE",
           card: "#FFFFFF",
         },
         // Status Colors

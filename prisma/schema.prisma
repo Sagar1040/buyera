@@ -372,18 +372,30 @@ model Banner {
   @@index([isActive, order])
 }
 
-model SiteSettings {
-  id                     String   @id @default(uuid())
-  storeName              String   @default("BUYERA")
-  tagline                String   @default("Elegance. Modesty. You.")
-  supportEmail           String   @default("support@buyera.in")
-  supportPhone           String   @default("+91 98765 43210")
+model SiteSetting {
+  id                    String   @id @default("site_config")
+  // Topbar & Announcement
+  announcementText      String   @default("Free Shipping across India | Extra 10% Off on First Order: Code ARAMYA10")
+  announcementActive    Boolean  @default(true)
+  // Brand & Logo
+  siteTitle             String   @default("BUYERA")
+  siteTagline           String   @default("Elegance. Modesty. You.")
+  logoUrl               String   @default("/logo.png")
+  faviconUrl            String   @default("/favicon.ico")
+  // Contact & Socials
+  supportEmail          String   @default("support@buyera.in")
+  supportPhone          String   @default("+91 98765 43210")
+  whatsappNumber        String   @default("+91 98765 43210")
+  instagramUrl          String?  @default("https://instagram.com/buyera.official")
+  facebookUrl           String?  @default("https://facebook.com/buyera.official")
+  // Shipping & Thresholds
   freeShippingThreshold Float    @default(999.0)
-  announcementText       String?  @default("Complimentary Express Shipping Across India on Orders Above ₹999")
-  announcementActive     Boolean  @default(true)
-  instagramUrl           String?  @default("https://instagram.com")
-  facebookUrl            String?  @default("https://facebook.com")
-  updatedAt              DateTime @updatedAt
+  standardShippingFee   Float    @default(99.0)
+  enableCOD             Boolean  @default(true)
+  enableRazorpay        Boolean  @default(true)
+  // Footer Bio & Policies
+  footerBio             String   @default("BUYERA is dedicated to bringing you the finest modest and ethnic fashion crafted with certified pure fabrics and bespoke tailoring.")
+  updatedAt             DateTime @updatedAt
 }
 
 model ContactMessage {

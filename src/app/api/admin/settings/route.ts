@@ -3,45 +3,46 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+const DEFAULT_SITE_SETTINGS = {
+  id: "site_config",
+  siteTitle: "BUYERA",
+  siteTagline: "Elegance. Modesty. You.",
+  logoUrl: "/logo.png",
+  faviconUrl: "/favicon.ico",
+  announcementText: "Free Shipping across India | Extra 10% Off on First Order: Code ARAMYA10",
+  announcementActive: true,
+  supportEmail: "support@buyera.in",
+  supportPhone: "+91 98765 43210",
+  whatsappNumber: "+91 98765 43210",
+  instagramUrl: "https://instagram.com/buyera.official",
+  facebookUrl: "https://facebook.com/buyera.official",
+  freeShippingThreshold: 999.0,
+  standardShippingFee: 99.0,
+  enableCOD: true,
+  enableRazorpay: true,
+  footerBio:
+    "BUYERA is dedicated to bringing you the finest modest and ethnic fashion crafted with certified pure fabrics and bespoke tailoring.",
+};
+
 export async function GET() {
   try {
     try {
-      let settings = await prisma.siteSettings.findFirst();
+      let settings = await (prisma as any).siteSetting.findUnique({
+        where: { id: "site_config" },
+      });
+
       if (!settings) {
-        settings = await prisma.siteSettings.create({
-          data: {
-            storeName: "BUYERA",
-            tagline: "Elegance. Modesty. You.",
-            supportEmail: "support@buyera.in",
-            supportPhone: "+91 98765 43210",
-            freeShippingThreshold: 999,
-            announcementText:
-              "Complimentary Express Shipping Across India on Orders Above ₹999",
-            announcementActive: true,
-            instagramUrl: "https://instagram.com/buyera.official",
-            facebookUrl: "https://facebook.com/buyera.official",
-          },
+        settings = await (prisma as any).siteSetting.create({
+          data: DEFAULT_SITE_SETTINGS,
         });
       }
+
       return NextResponse.json({ success: true, settings });
     } catch (dbErr) {
       console.warn("Using fallback settings due to DB error:", dbErr);
     }
 
-    const fallbackSettings = {
-      storeName: "BUYERA",
-      tagline: "Elegance. Modesty. You.",
-      supportEmail: "support@buyera.in",
-      supportPhone: "+91 98765 43210",
-      freeShippingThreshold: 999,
-      announcementText:
-        "Complimentary Express Shipping Across India on Orders Above ₹999",
-      announcementActive: true,
-      instagramUrl: "https://instagram.com/buyera.official",
-      facebookUrl: "https://facebook.com/buyera.official",
-    };
-
-    return NextResponse.json({ success: true, settings: fallbackSettings });
+    return NextResponse.json({ success: true, settings: DEFAULT_SITE_SETTINGS });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to load settings" },
@@ -54,54 +55,58 @@ export async function PUT(req: Request) {
   try {
     const body = await req.json();
     const {
-      storeName,
-      tagline,
-      supportEmail,
-      supportPhone,
-      freeShippingThreshold,
+      siteTitle,
+      siteTagline,
+      logoUrl,
+      faviconUrl,
       announcementText,
       announcementActive,
+      supportEmail,
+      supportPhone,
+      whatsappNumber,
       instagramUrl,
       facebookUrl,
+      freeShippingThreshold,
+      standardShippingFee,
+      enableCOD,
+      enableRazorpay,
+      footerBio,
     } = body;
 
+    const dataToSave = {
+      ...(siteTitle !== undefined && { siteTitle: siteTitle.trim() }),
+      ...(siteTagline !== undefined && { siteTagline: siteTagline.trim() }),
+      ...(logoUrl !== undefined && { logoUrl: logoUrl.trim() }),
+      ...(faviconUrl !== undefined && { faviconUrl: faviconUrl.trim() }),
+      ...(announcementText !== undefined && { announcementText }),
+      ...(announcementActive !== undefined && {
+        announcementActive: Boolean(announcementActive),
+      }),
+      ...(supportEmail !== undefined && { supportEmail: supportEmail.trim() }),
+      ...(supportPhone !== undefined && { supportPhone: supportPhone.trim() }),
+      ...(whatsappNumber !== undefined && { whatsappNumber: whatsappNumber.trim() }),
+      ...(instagramUrl !== undefined && { instagramUrl: instagramUrl.trim() }),
+      ...(facebookUrl !== undefined && { facebookUrl: facebookUrl.trim() }),
+      ...(freeShippingThreshold !== undefined && {
+        freeShippingThreshold: Number(freeShippingThreshold),
+      }),
+      ...(standardShippingFee !== undefined && {
+        standardShippingFee: Number(standardShippingFee),
+      }),
+      ...(enableCOD !== undefined && { enableCOD: Boolean(enableCOD) }),
+      ...(enableRazorpay !== undefined && { enableRazorpay: Boolean(enableRazorpay) }),
+      ...(footerBio !== undefined && { footerBio }),
+    };
+
     try {
-      const existing = await prisma.siteSettings.findFirst();
-      let updated;
-      if (existing) {
-        updated = await prisma.siteSettings.update({
-          where: { id: existing.id },
-          data: {
-            ...(storeName && { storeName }),
-            ...(tagline !== undefined && { tagline }),
-            ...(supportEmail && { supportEmail }),
-            ...(supportPhone && { supportPhone }),
-            ...(freeShippingThreshold !== undefined && {
-              freeShippingThreshold: Number(freeShippingThreshold),
-            }),
-            ...(announcementText !== undefined && { announcementText }),
-            ...(announcementActive !== undefined && {
-              announcementActive: Boolean(announcementActive),
-            }),
-            ...(instagramUrl !== undefined && { instagramUrl }),
-            ...(facebookUrl !== undefined && { facebookUrl }),
-          },
-        });
-      } else {
-        updated = await prisma.siteSettings.create({
-          data: {
-            storeName: storeName || "BUYERA",
-            tagline: tagline || "Elegance. Modesty. You.",
-            supportEmail: supportEmail || "support@buyera.in",
-            supportPhone: supportPhone || "+91 98765 43210",
-            freeShippingThreshold: Number(freeShippingThreshold) || 999,
-            announcementText: announcementText || "",
-            announcementActive: Boolean(announcementActive),
-            instagramUrl: instagramUrl || "",
-            facebookUrl: facebookUrl || "",
-          },
-        });
-      }
+      const updated = await (prisma as any).siteSetting.upsert({
+        where: { id: "site_config" },
+        update: dataToSave,
+        create: {
+          ...DEFAULT_SITE_SETTINGS,
+          ...dataToSave,
+        },
+      });
 
       return NextResponse.json({
         success: true,
@@ -109,10 +114,11 @@ export async function PUT(req: Request) {
         settings: updated,
       });
     } catch (dbErr) {
+      console.warn("DB settings update simulated:", dbErr);
       return NextResponse.json({
         success: true,
         message: "Settings updated (simulated mode).",
-        settings: body,
+        settings: { ...DEFAULT_SITE_SETTINGS, ...body },
       });
     }
   } catch (error: any) {

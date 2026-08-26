@@ -31,49 +31,49 @@ export function Newsletter() {
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText("BUYERA15");
+    navigator.clipboard.writeText("ARAMYA10");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <section className="bg-charcoal text-white py-16 sm:py-20 px-4 sm:px-6 lg:px-8 border-t border-gold/30 relative overflow-hidden">
-      {/* Background Soft Gold Blobs */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-gold/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-blush/10 rounded-full blur-3xl pointer-events-none" />
+    <section className="bg-charcoal text-white py-16 sm:py-20 px-4 sm:px-6 lg:px-8 border-t border-aramyaBorder/10 relative overflow-hidden">
+      {/* Background Soft Blobs */}
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-terracotta/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-olive/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto max-w-3xl text-center space-y-6 relative z-10">
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-white/10 backdrop-blur-md border border-gold/40 text-gold-light text-[10px] uppercase tracking-[0.25em] font-semibold rounded-full">
-          <Sparkles className="w-3 h-3 text-gold" />
-          BUYERA PRIVÉ ATELIER
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-cream-100 text-[10px] uppercase tracking-[0.25em] font-semibold rounded-full">
+          <Sparkles className="w-3 h-3 text-terracotta-300" />
+          BUYERA PRIVÉ CLUB
         </div>
 
         <h2 className="font-editorial-heading text-3xl sm:text-5xl text-cream-50 font-normal leading-tight">
-          Unlock 15% OFF Your First Haute Couture Order
+          Unlock 10% OFF Your First Order
         </h2>
 
         <p className="text-xs sm:text-sm text-cream-200/80 font-light max-w-lg mx-auto leading-relaxed">
-          Join our global Privé Circle for private festive drop previews, bespoke trunk show invitations, and member privileges.
+          Subscribe for private drop announcements, bespoke trunk show previews, and styling concierge access.
         </p>
 
         {status === "success" ? (
-          <div className="bg-white/10 backdrop-blur-md border border-gold/50 p-6 rounded-3xl max-w-md mx-auto space-y-3 animate-fadeIn">
-            <div className="w-10 h-10 rounded-full bg-gold/20 text-gold flex items-center justify-center mx-auto">
+          <div className="bg-white/10 backdrop-blur-md border border-terracotta/50 p-6 rounded-3xl max-w-md mx-auto space-y-3 animate-fadeIn">
+            <div className="w-10 h-10 rounded-full bg-terracotta/20 text-terracotta-200 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <h3 className="font-editorial-heading text-xl text-cream-50 font-normal">
-              Welcome to the Privé Circle
+              Welcome to the Privé Club
             </h3>
             <p className="text-xs text-cream-200/80 font-light">
-              Your secret 15% off voucher code has been unlocked:
+              Your secret 10% off voucher code has been unlocked:
             </p>
             <div className="flex items-center justify-center gap-2 pt-1">
-              <span className="font-mono text-base font-bold bg-charcoal px-4 py-1.5 rounded-full text-gold border border-gold/40">
-                BUYERA15
+              <span className="font-mono text-base font-bold bg-charcoal px-4 py-1.5 rounded-full text-white border border-terracotta">
+                ARAMYA10
               </span>
               <button
                 onClick={handleCopyCode}
-                className="px-4 py-1.5 bg-gold text-charcoal text-xs font-bold uppercase rounded-full flex items-center gap-1 hover:bg-gold-light transition-colors"
+                className="px-4 py-1.5 bg-terracotta text-white text-xs font-bold uppercase rounded-full flex items-center gap-1 hover:bg-terracotta-600 transition-colors"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? "COPIED" : "COPY CODE"}
@@ -89,14 +89,14 @@ export function Newsletter() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address..."
-                className="w-full pl-11 pr-4 py-3.5 bg-white/10 backdrop-blur-md border border-white/25 rounded-full text-white placeholder:text-white/45 text-xs focus:outline-none focus:border-gold transition-colors"
+                className="w-full pl-11 pr-4 py-3.5 bg-white/10 backdrop-blur-md border border-white/25 rounded-full text-white placeholder:text-white/45 text-xs focus:outline-none focus:border-terracotta transition-colors"
               />
               <Mail className="w-4 h-4 text-white/40 absolute left-4 top-4" />
             </div>
             <button
               type="submit"
               disabled={status === "loading"}
-              className="btn-aramya-gold whitespace-nowrap"
+              className="btn-aramya-terracotta whitespace-nowrap"
             >
               {status === "loading" ? "JOINING..." : "JOIN PRIVÉ"}
             </button>

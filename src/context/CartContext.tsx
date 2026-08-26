@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { ProductType, ProductVariantType } from "@/types/product";
+import { useSettings } from "@/context/SettingsContext";
 
 export interface CartItem {
   id: string;
@@ -47,6 +48,7 @@ const CART_STORAGE_KEY = "buyera_cart_v1";
 const COUPON_STORAGE_KEY = "buyera_coupon_v1";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { settings } = useSettings();
   const [items, setItems] = useState<CartItem[]>([]);
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const [discount, setDiscount] = useState<number>(0);
@@ -82,13 +84,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Recalculate discount whenever items or coupon change
   useEffect(() => {
-    const sub = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const sub = items.reduce((acc: number, item: CartItem) => acc + item.price * item.quantity, 0);
 
-    if (couponCode === "BUYERA10") {
-      const disc = sub >= 1999 ? Math.min(1000, Math.round((sub * 10) / 100)) : 0;
+    if (couponCode === "ARAMYA10" || couponCode === "BUYERA10") {
+      const disc = Math.round((sub * 10) / 100);
       setDiscount(disc);
     } else if (couponCode === "ROYAL500") {
       const disc = sub >= 3999 ? 500 : 0;
+      setDiscount(disc);
+    } else if (couponCode === "FESTIVE25" || couponCode === "ARAMYA25") {
+      const disc = Math.round((sub * 25) / 100);
       setDiscount(disc);
     } else {
       setDiscount(0);
@@ -104,47 +109,42 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       quantity?: number;
     }
   ) => {
+    const size = options?.size || "M";
+    const color = options?.color || product.variants?.[0]?.color || "Standard";
     const quantity = options?.quantity || 1;
-    const size = options?.size || options?.variant?.size || "Standard";
-    const color = options?.color || options?.variant?.color || "Default";
     const variantId = options?.variant?.id || null;
-    const price = options?.variant?.price || product.price;
 
-    const primaryImage =
-      product.images?.find((img) => img.isPrimary)?.url ||
+    const cartItemId = `${product.id}-${size}-${color}`;
+    const image =
+      product.images?.find((img: any) => img.isPrimary)?.url ||
       product.images?.[0]?.url ||
-      "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop";
+      "/placeholder.jpg";
 
-    setItems((prev) => {
-      const existingIndex = prev.findIndex(
-        (i) =>
-          i.productId === product.id &&
-          i.size === size &&
-          i.color === color &&
-          i.variantId === variantId
-      );
-
-      if (existingIndex > -1) {
-        const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
-        return updated;
+    setItems((prev: CartItem[]) => {
+      const existing = prev.find((i: CartItem) => i.id === cartItemId);
+      if (existing) {
+        return prev.map((i: CartItem) =>
+          i.id === cartItemId
+            ? { ...i, quantity: i.quantity + quantity }
+            : i
+        );
       }
-
-      const newItem: CartItem = {
-        id: `cart-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-        productId: product.id,
-        name: product.name,
-        slug: product.slug,
-        price,
-        mrp: product.mrp,
-        image: primaryImage,
-        size,
-        color,
-        variantId,
-        quantity,
-      };
-
-      return [...prev, newItem];
+      return [
+        ...prev,
+        {
+          id: cartItemId,
+          productId: product.id,
+          name: product.name,
+          slug: product.slug,
+          price: product.price,
+          mrp: product.mrp,
+          image,
+          size,
+          color,
+          variantId,
+          quantity,
+        },
+      ];
     });
   };
 
@@ -153,13 +153,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeFromCart(id);
       return;
     }
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+    setItems((prev: CartItem[]) =>
+      prev.map((item: CartItem) => (item.id === id ? { ...item, quantity } : item))
     );
   };
 
   const removeFromCart = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setItems((prev: CartItem[]) => prev.filter((item: CartItem) => item.id !== id));
   };
 
   const clearCart = () => {
@@ -174,17 +174,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const applyCoupon = async (code: string) => {
-    const formatted = code.toUpperCase().trim();
-    const sub = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const applyCoupon = async (
+    code: string
+  ): Promise<{ success: boolean; message: string }> => {
+    const formatted = code.trim().toUpperCase();
+    const sub = items.reduce((acc: number, item: CartItem) => acc + item.price * item.quantity, 0);
 
-    if (formatted === "BUYERA10") {
-      if (sub < 1999) {
-        return {
-          success: false,
-          message: "BUYERA10 requires a minimum order value of ₹1,999",
-        };
-      }
+    if (formatted === "BUYERA10" || formatted === "ARAMYA10") {
       setCouponCode(formatted);
       localStorage.setItem(COUPON_STORAGE_KEY, formatted);
       return { success: true, message: "Coupon applied: 10% Off!" };
@@ -202,6 +198,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return { success: true, message: "Coupon applied: ₹500 Flat Off!" };
     }
 
+    if (formatted === "FESTIVE25" || formatted === "ARAMYA25") {
+      setCouponCode(formatted);
+      localStorage.setItem(COUPON_STORAGE_KEY, formatted);
+      return { success: true, message: "Coupon applied: 25% Off Festive Atelier!" };
+    }
+
     return { success: false, message: "Invalid or expired promotional code" };
   };
 
@@ -215,10 +217,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const freeShippingThreshold = 999;
-  const shipping = subtotal === 0 || subtotal >= freeShippingThreshold ? 0 : 99;
+  const cartCount = items.reduce((acc: number, item: CartItem) => acc + item.quantity, 0);
+  const subtotal = items.reduce((acc: number, item: CartItem) => acc + item.price * item.quantity, 0);
+  const threshold = settings.freeShippingThreshold || 999;
+  const standardFee = settings.standardShippingFee !== undefined ? settings.standardShippingFee : 99;
+  const shipping = subtotal === 0 || subtotal >= threshold ? 0 : standardFee;
   const total = Math.max(0, subtotal - discount + shipping);
 
   return (

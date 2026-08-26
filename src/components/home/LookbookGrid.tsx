@@ -69,17 +69,17 @@ const LOOKBOOK_ITEMS: LookbookItem[] = [
 
 export function LookbookGrid() {
   return (
-    <section className="py-20 bg-warmBeige/40 border-b border-stoneBorder/60 relative overflow-hidden">
+    <section className="py-20 bg-cream/40 bg-aramya-pattern border-b border-aramyaBorder relative overflow-hidden">
       {/* Background Glow Blobs */}
-      <div className="absolute top-1/3 left-10 w-80 h-80 bg-blush/60 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-80 h-80 bg-sage/50 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 left-10 w-80 h-80 bg-terracotta-50/70 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-80 h-80 bg-olive-50/70 rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto space-y-2.5">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white text-[10px] tracking-[0.22em] uppercase text-charcoal/70 font-brand-badge font-bold rounded-full border border-stoneBorder">
-            <Instagram className="w-3 h-3 text-gold" />
-            STYLED BY OUR PRIVÉ COMMUNITY
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-white text-[10px] tracking-[0.22em] uppercase text-terracotta font-brand-badge font-bold rounded-full border border-aramyaBorder shadow-xs">
+            <Instagram className="w-3 h-3 text-terracotta" />
+            STYLED BY OUR COMMUNITY
           </span>
           <h2 className="font-editorial-heading text-2xl sm:text-4xl text-charcoal font-normal">
             The Aramya Lookbook
@@ -94,7 +94,7 @@ export function LookbookGrid() {
           {LOOKBOOK_ITEMS.map((item) => (
             <div
               key={item.id}
-              className="group bg-white rounded-3xl border border-stoneBorder/80 overflow-hidden shadow-card hover:shadow-luxury-lg hover:border-gold/60 transition-all duration-500 flex flex-col justify-between"
+              className="group bg-white rounded-3xl border border-aramyaBorder overflow-hidden shadow-card hover:shadow-luxury-lg hover:border-terracotta/50 transition-all duration-500 flex flex-col justify-between"
             >
               {/* Image Container with Soft Arched Top */}
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-cream-100">
@@ -118,7 +118,7 @@ export function LookbookGrid() {
                 <div className="absolute bottom-3 inset-x-3">
                   <Link
                     href={`/product/${item.productSlug}`}
-                    className="block bg-charcoal/85 backdrop-blur-md text-white text-[10px] font-medium py-1.5 px-3 rounded-full hover:bg-black transition-colors line-clamp-1 text-center"
+                    className="block bg-charcoal/90 backdrop-blur-md text-white text-[10px] font-semibold py-2 px-3 rounded-full hover:bg-terracotta transition-colors line-clamp-1 text-center"
                   >
                     Shop This Silhouette →
                   </Link>
@@ -138,11 +138,11 @@ export function LookbookGrid() {
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-stoneBorder/50 flex items-center justify-between">
+                <div className="pt-2 border-t border-aramyaBorder/60 flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-charcoal">
                     {item.author}
                   </span>
-                  <span className="text-[9px] uppercase tracking-widest text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                  <span className="text-[9px] uppercase tracking-widest text-olive-700 font-bold bg-olive-50 px-2 py-0.5 rounded-full border border-olive-100">
                     Verified Order
                   </span>
                 </div>

@@ -244,41 +244,41 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-canvas-border transition-all duration-300">
-      {/* Middle Bar: Logo & Search & User Actions */}
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-aramyaBorder transition-all duration-300">
+      {/* Middle Bar: Logo & Centered Search & User Actions */}
       <div className="container mx-auto px-4 lg:px-8 py-3.5">
         <div className="flex items-center justify-between gap-4 lg:gap-8">
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-charcoal hover:text-gold transition-colors"
+            className="lg:hidden p-2 text-charcoal hover:text-terracotta transition-colors"
             aria-label="Toggle Navigation"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
-          {/* Centered Brand Identity */}
+          {/* Brand Identity */}
           <div className="flex items-center">
             <Link href="/" className="flex flex-col items-start group">
               <Logo size="md" showTagline={true} />
             </Link>
           </div>
 
-          {/* Cbazaar-Style Search Bar with Auto-Suggestions */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-4 relative" ref={searchRef}>
+          {/* Aramya Centered Minimalist Search Bar with Auto-Suggestions */}
+          <div className="hidden md:flex flex-1 max-w-lg mx-auto relative" ref={searchRef}>
             <form onSubmit={handleSearchSubmit} className="w-full relative">
               <input
                 type="text"
                 value={searchQuery}
                 onFocus={() => setSearchFocused(true)}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search luxury abayas, silk hijabs, pakistani suits, anarkalis..."
-                className="w-full pl-10 pr-24 py-2.5 bg-cream-50 border border-canvas-border text-xs placeholder:text-charcoal/40 focus:outline-none focus:border-charcoal focus:bg-white transition-all shadow-inner"
+                placeholder="Search handcrafted abayas, hijabs, kurtas, kaftans..."
+                className="w-full pl-10 pr-24 py-2 bg-cream-50/80 border border-aramyaBorder rounded-full text-xs placeholder:text-charcoal/45 focus:outline-none focus:border-terracotta focus:bg-white transition-all shadow-xs"
               />
-              <Search className="w-4 h-4 text-charcoal/40 absolute left-3.5 top-3" />
+              <Search className="w-4 h-4 text-charcoal/40 absolute left-3.5 top-2.5" />
               <button
                 type="submit"
-                className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-charcoal text-white hover:bg-gold transition-colors text-[10px] uppercase font-semibold tracking-wider"
+                className="absolute right-1 top-1 bottom-1 px-4 bg-charcoal text-white hover:bg-terracotta transition-colors text-[10px] uppercase font-bold tracking-wider rounded-full"
               >
                 Search
               </button>
@@ -286,12 +286,12 @@ export function Navbar() {
 
             {/* Trending Suggestions Dropdown */}
             {searchFocused && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-canvas-border shadow-luxury p-4 z-50 animate-fadeIn">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-aramyaBorder shadow-luxury p-4 z-50 animate-fadeIn rounded-2xl">
                 <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-charcoal/50 font-bold mb-2.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-gold" />
+                  <TrendingUp className="w-3.5 h-3.5 text-terracotta" />
                   Trending Searches
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {trendingSearches.map((item) => (
                     <button
                       key={item}
@@ -300,7 +300,7 @@ export function Navbar() {
                         setSearchFocused(false);
                         router.push(`/shop?search=${encodeURIComponent(item)}`);
                       }}
-                      className="text-xs px-3 py-1.5 bg-cream-50 hover:bg-charcoal hover:text-white border border-canvas-border transition-all text-charcoal/80"
+                      className="text-xs px-3 py-1 bg-cream-50 hover:bg-terracotta hover:text-white border border-aramyaBorder rounded-full transition-all text-charcoal/80"
                     >
                       {item}
                     </button>
@@ -311,19 +311,19 @@ export function Navbar() {
           </div>
 
           {/* Right Action Icons (Wishlist, Cart, Account) */}
-          <div className="flex items-center space-x-3 sm:space-x-5">
-            {/* Wishlist with Live Counter */}
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            {/* Wishlist with Soft Pill Counter */}
             <Link
               href="/wishlist"
-              className="p-2 text-charcoal hover:text-gold transition-colors relative flex items-center gap-1"
+              className="p-2 text-charcoal hover:text-terracotta transition-colors relative flex items-center gap-1.5 group"
               aria-label="Wishlist"
             >
-              <Heart className="w-5 h-5" />
-              <span className="hidden sm:inline text-xs uppercase tracking-wider font-medium text-charcoal/70">
+              <Heart className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <span className="hidden sm:inline text-xs uppercase tracking-wider font-medium text-charcoal/80">
                 Wishlist
               </span>
               {wishlistCount > 0 && (
-                <span className="absolute -top-0.5 right-0.5 sm:-top-1 sm:right-auto sm:left-4 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-fadeIn shadow-sm">
+                <span className="bg-terracotta text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full min-w-[18px] text-center shadow-xs">
                   {wishlistCount}
                 </span>
               )}
@@ -332,15 +332,15 @@ export function Navbar() {
             {/* Shopping Bag with Live Counter */}
             <Link
               href="/cart"
-              className="p-2 text-charcoal hover:text-gold transition-colors relative flex items-center gap-1"
+              className="p-2 text-charcoal hover:text-terracotta transition-colors relative flex items-center gap-1.5 group"
               aria-label="Shopping Bag"
             >
-              <ShoppingBag className="w-5 h-5" />
-              <span className="hidden sm:inline text-xs uppercase tracking-wider font-medium text-charcoal/70">
+              <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <span className="hidden sm:inline text-xs uppercase tracking-wider font-medium text-charcoal/80">
                 Bag
               </span>
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 right-0.5 sm:-top-1 sm:right-auto sm:left-4 bg-charcoal text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-fadeIn shadow-sm">
+                <span className="bg-charcoal text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full min-w-[18px] text-center shadow-xs">
                   {cartCount}
                 </span>
               )}
@@ -352,7 +352,7 @@ export function Navbar() {
                 <>
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center gap-1.5 p-1 border border-canvas-border hover:border-gold text-charcoal transition-colors bg-cream-50"
+                    className="flex items-center gap-1.5 p-1 border border-aramyaBorder hover:border-terracotta text-charcoal transition-colors bg-cream-50 rounded-full"
                     aria-label="User Account Menu"
                   >
                     <div className="w-6 h-6 rounded-full bg-charcoal text-white text-[10px] font-bold flex items-center justify-center uppercase">
@@ -363,8 +363,8 @@ export function Navbar() {
 
                   {/* Flyout Menu */}
                   {userDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-60 bg-white border border-canvas-border shadow-luxury py-2 z-50 animate-fadeIn">
-                      <div className="px-4 py-3 border-b border-canvas-border">
+                    <div className="absolute right-0 mt-2 w-60 bg-white border border-aramyaBorder shadow-luxury py-2 z-50 animate-fadeIn rounded-2xl">
+                      <div className="px-4 py-3 border-b border-aramyaBorder">
                         <p className="text-xs font-semibold text-charcoal truncate">
                           {session.user.name || "Member"}
                         </p>
@@ -376,7 +376,7 @@ export function Navbar() {
                       <Link
                         href="/account/orders"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-charcoal hover:bg-cream-50 hover:text-gold transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-charcoal hover:bg-cream-50 hover:text-terracotta transition-colors"
                       >
                         <Package className="w-4 h-4 text-gold-dark" />
                         My Orders
