@@ -7,7 +7,7 @@ const DEFAULT_SITE_SETTINGS = {
   id: "site_config",
   siteTitle: "BUYERA",
   siteTagline: "Elegance. Modesty. You.",
-  logoUrl: "/logo.png",
+  logoUrl: "/logo.svg",
   faviconUrl: "/favicon.ico",
   announcementText: "Free Shipping across India | Extra 10% Off on First Order: Code ARAMYA10",
   announcementActive: true,
