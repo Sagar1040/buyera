@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import { useSettings } from "@/context/SettingsContext";
 
 type TabKey = "general" | "announcement" | "shipping" | "contact" | "footer";
@@ -274,17 +275,17 @@ export default function AdminSettingsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Input
-                label="Logo Image URL"
+            <div className="space-y-4 pt-2">
+              <ImageUpload
+                type="brand"
+                label="Store Brand Logo (SVG or PNG)"
                 value={form.logoUrl}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, logoUrl: e.target.value }))
-                }
-                helperText="URL to high-res transparent PNG or SVG logo."
+                onChange={(url) => setForm((prev) => ({ ...prev, logoUrl: url }))}
+                folder="branding"
               />
+
               <Input
-                label="Favicon URL"
+                label="Favicon Image URL"
                 value={form.faviconUrl}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, faviconUrl: e.target.value }))

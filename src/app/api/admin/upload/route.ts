@@ -1,142 +1,74 @@
 import { NextResponse } from "next/server";
-import path from "path";
-import fs from "fs/promises";
+import { uploadToSupabase, deleteFromSupabase } from "@/lib/supabase-storage";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const contentType = req.headers.get("content-type") || "";
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+    const folder = (formData.get("folder") as string) || "products";
 
-    // 1. Handle multipart/form-data
-    if (contentType.includes("multipart/form-data")) {
-      const formData = await req.formData();
-      const file = formData.get("file") as File | null;
-      const files = formData.getAll("files") as File[];
-
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      await fs.mkdir(uploadDir, { recursive: true });
-
-      // Handle single file
-      if (file && file instanceof File) {
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-
-        // Sanitize and create unique filename
-        const originalName = file.name || "image.png";
-        const cleanName = originalName.replace(/[^a-zA-Z0-9.-]/g, "_");
-        const ext = path.extname(cleanName) || ".png";
-        const baseName = path.basename(cleanName, ext);
-        const fileName = `${baseName}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}${ext}`;
-
-        const filePath = path.join(uploadDir, fileName);
-        await fs.writeFile(filePath, buffer);
-
-        const fileUrl = `/uploads/${fileName}`;
-
-        return NextResponse.json({
-          success: true,
-          message: "Image uploaded successfully.",
-          url: fileUrl,
-          name: originalName,
-          size: file.size,
-          type: file.type,
-        });
-      }
-
-      // Handle multiple files
-      if (files && files.length > 0) {
-        const uploadedUrls: string[] = [];
-
-        for (const f of files) {
-          if (f instanceof File) {
-            const bytes = await f.arrayBuffer();
-            const buffer = Buffer.from(bytes);
-            const originalName = f.name || "image.png";
-            const cleanName = originalName.replace(/[^a-zA-Z0-9.-]/g, "_");
-            const ext = path.extname(cleanName) || ".png";
-            const baseName = path.basename(cleanName, ext);
-            const fileName = `${baseName}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}${ext}`;
-
-            const filePath = path.join(uploadDir, fileName);
-            await fs.writeFile(filePath, buffer);
-            uploadedUrls.push(`/uploads/${fileName}`);
-          }
-        }
-
-        return NextResponse.json({
-          success: true,
-          message: `${uploadedUrls.length} images uploaded successfully.`,
-          urls: uploadedUrls,
-          url: uploadedUrls[0] || "",
-        });
-      }
-
+    if (!file) {
       return NextResponse.json(
-        { success: false, error: "No file provided in form data." },
+        { success: false, error: "No image file provided." },
         { status: 400 }
       );
     }
 
-    // 2. Handle JSON payload (Base64 image)
-    if (contentType.includes("application/json")) {
-      const body = await req.json();
-      const { image, base64, filename } = body;
-      const dataString = image || base64;
-
-      if (!dataString) {
-        return NextResponse.json(
-          { success: false, error: "No base64 image data provided." },
-          { status: 400 }
-        );
-      }
-
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      await fs.mkdir(uploadDir, { recursive: true });
-
-      // Match base64 header (e.g. data:image/png;base64,...)
-      const matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-      let buffer: Buffer;
-      let ext = ".png";
-
-      if (matches && matches.length === 3) {
-        const mimeType = matches[1];
-        if (mimeType.includes("jpeg") || mimeType.includes("jpg")) ext = ".jpg";
-        else if (mimeType.includes("png")) ext = ".png";
-        else if (mimeType.includes("webp")) ext = ".webp";
-        else if (mimeType.includes("gif")) ext = ".gif";
-        else if (mimeType.includes("svg")) ext = ".svg";
-
-        buffer = Buffer.from(matches[2], "base64");
-      } else {
-        // Raw base64
-        buffer = Buffer.from(dataString, "base64");
-      }
-
-      const cleanFilename = (filename || "image").replace(/[^a-zA-Z0-9.-]/g, "_");
-      const baseName = path.basename(cleanFilename, path.extname(cleanFilename));
-      const fileName = `${baseName}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}${ext}`;
-
-      const filePath = path.join(uploadDir, fileName);
-      await fs.writeFile(filePath, buffer);
-
-      const fileUrl = `/uploads/${fileName}`;
-
-      return NextResponse.json({
-        success: true,
-        message: "Base64 image uploaded successfully.",
-        url: fileUrl,
-      });
+    // Check size limit (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { success: false, error: "File size exceeds 10MB limit." },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json(
-      { success: false, error: "Unsupported Content-Type header." },
-      { status: 400 }
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    const result = await uploadToSupabase(
+      buffer,
+      folder,
+      file.name,
+      file.type || "image/jpeg"
     );
+
+    if (!result.success || !result.url) {
+      return NextResponse.json(
+        { success: false, error: result.error || "Upload failed." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      url: result.url,
+    });
   } catch (error: any) {
     console.error("Admin upload API error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to upload image." },
+      { success: false, error: error.message || "Failed to upload file." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { url } = await req.json();
+    if (!url) {
+      return NextResponse.json(
+        { success: false, error: "No URL provided to delete." },
+        { status: 400 }
+      );
+    }
+
+    const result = await deleteFromSupabase(url);
+    return NextResponse.json(result);
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to delete file." },
       { status: 500 }
     );
   }

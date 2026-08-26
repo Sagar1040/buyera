@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { deleteFromSupabase } from "@/lib/supabase-storage";
 
 export const dynamic = "force-dynamic";
 
@@ -207,6 +208,7 @@ export async function DELETE(
           },
           include: {
             variants: true,
+            images: true,
           },
         });
 
@@ -217,6 +219,17 @@ export async function DELETE(
 
         const realId = existing.id;
         const variantIds = existing.variants.map((v) => v.id);
+
+        // Purge image files from Supabase Storage asynchronously
+        if (existing.images && existing.images.length > 0) {
+          for (const img of existing.images) {
+            if (img.url) {
+              await deleteFromSupabase(img.url).catch((e) =>
+                console.warn("Storage purge warning:", e)
+              );
+            }
+          }
+        }
 
         // 1. Delete CartItems pointing to this product or any of its variants
         await tx.cartItem.deleteMany({

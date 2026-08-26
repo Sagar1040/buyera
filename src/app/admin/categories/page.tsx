@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -350,14 +351,11 @@ export default function AdminCategoriesPage() {
                 />
               </div>
 
-              <Input
-                label="Thumbnail Image URL"
-                type="url"
+              <ImageUpload
+                type="category"
+                label="Category Silhouette Image *"
                 value={form.imageUrl}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, imageUrl: e.target.value }))
-                }
-                placeholder="https://images.unsplash.com/..."
+                onChange={(url) => setForm((prev) => ({ ...prev, imageUrl: url }))}
               />
 
               <div className="grid grid-cols-2 gap-4">

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { ImageUploadDropzone } from "@/components/admin/ImageUploadDropzone";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 const COMMON_SIZES = ["52", "54", "56", "58", "60", "XS", "S", "M", "L", "XL", "Standard"];
 const COMMON_COLORS = [
@@ -338,11 +338,11 @@ export default function AdminNewProductPage() {
                   )}
                 </div>
 
-                <ImageUploadDropzone
+                <ImageUpload
+                  type="product"
                   value={img}
                   onChange={(newUrl) => handleUpdateImage(idx, newUrl)}
-                  label=""
-                  aspectRatio="product"
+                  onDelete={() => handleRemoveImage(idx)}
                 />
               </div>
             ))}

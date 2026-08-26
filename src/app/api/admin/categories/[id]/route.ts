@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { deleteFromSupabase } from "@/lib/supabase-storage";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,23 @@ export async function DELETE(
 ) {
   try {
     try {
+      const existing = await prisma.category.findFirst({
+        where: {
+          OR: [{ id: params.id }, { slug: params.id }],
+        },
+      });
+
+      if (existing?.imageUrl) {
+        await deleteFromSupabase(existing.imageUrl).catch((err) =>
+          console.warn("Category image purge notice:", err)
+        );
+      }
+      if (existing?.bannerUrl) {
+        await deleteFromSupabase(existing.bannerUrl).catch((err) =>
+          console.warn("Category banner purge notice:", err)
+        );
+      }
+
       await prisma.category.deleteMany({
         where: {
           OR: [{ id: params.id }, { slug: params.id }],

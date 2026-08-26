@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { ImageUploadDropzone } from "@/components/admin/ImageUploadDropzone";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<any[]>([]);
@@ -356,19 +356,13 @@ export default function AdminBannersPage() {
             </div>
 
             <form onSubmit={handleSave} className="space-y-4">
-              {/* Direct Image Upload Dropzone */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal mb-1">
-                  Banner Artwork Image *
-                </label>
-                <ImageUploadDropzone
-                  value={form.imageUrl}
-                  onChange={(url) => setForm((prev) => ({ ...prev, imageUrl: url }))}
-                  aspectRatio="banner"
-                  label=""
-                  placeholder="https://images.unsplash.com/..."
-                />
-              </div>
+              {/* Direct Image Upload to Supabase */}
+              <ImageUpload
+                type="banner"
+                label="Banner Artwork Image *"
+                value={form.imageUrl}
+                onChange={(url) => setForm((prev) => ({ ...prev, imageUrl: url }))}
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
