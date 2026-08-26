@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,7 +9,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Scissors,
-  Star,
   Award,
   PlusCircle,
 } from "lucide-react";
@@ -49,13 +47,13 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
           "Explore certified pure fabrics, contemporary drapes, and artisanal tailoring.",
         ctaPrimary: {
           text: b.ctaText || "Shop Collection",
-          href: b.ctaUrl || "/shop",
+          href: b.ctaUrl || b.ctaLink || "/shop",
         },
         ctaSecondary: {
           text: "Explore All Silhouettes",
           href: "/shop",
         },
-        image: b.imageUrl,
+        image: b.imageUrl || b.image || "",
       }));
       setSlides(mapped);
     } else {
@@ -76,13 +74,13 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
                   "Explore certified pure fabrics, contemporary drapes, and artisanal tailoring.",
                 ctaPrimary: {
                   text: b.ctaText || "Shop Collection",
-                  href: b.ctaUrl || "/shop",
+                  href: b.ctaUrl || b.ctaLink || "/shop",
                 },
                 ctaSecondary: {
                   text: "Explore All Silhouettes",
                   href: "/shop",
                 },
-                image: b.imageUrl,
+                image: b.imageUrl || b.image || "",
               }));
             setSlides(mapped);
           } else {
@@ -146,7 +144,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
 
   return (
     <section
-      className="relative bg-cream min-h-[540px] sm:min-h-[620px] lg:min-h-[700px] flex items-center border-b border-aramyaBorder overflow-hidden"
+      className="relative bg-cream min-h-[520px] sm:min-h-[600px] lg:min-h-[660px] flex items-center border-b border-aramyaBorder overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -154,27 +152,31 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
       <div className="absolute top-1/4 -left-20 w-96 h-96 bg-terracotta/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-olive/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
           {/* Left Column: Editorial Copy */}
-          <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-white text-[10px] sm:text-xs tracking-[0.2em] uppercase text-terracotta font-brand-badge font-bold rounded-full border border-aramyaBorder shadow-xs">
-                <Sparkles className="w-3 h-3 text-terracotta" />
-                <span>{slide.badge}</span>
-              </div>
+          <div className="lg:col-span-7 space-y-5 sm:space-y-7 text-center lg:text-left">
+            <div className="space-y-2.5">
+              {slide.badge && (
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-white text-[10px] sm:text-xs tracking-[0.2em] uppercase text-terracotta font-brand-badge font-bold rounded-full border border-aramyaBorder shadow-xs">
+                  <Sparkles className="w-3 h-3 text-terracotta" />
+                  <span>{slide.badge}</span>
+                </div>
+              )}
 
               <h1 className="font-editorial-heading text-3xl sm:text-5xl lg:text-6xl text-charcoal font-normal leading-[1.15] tracking-tight">
                 {slide.title}
               </h1>
             </div>
 
-            <p className="text-xs sm:text-sm lg:text-base text-charcoal/70 font-light max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              {slide.subtitle}
-            </p>
+            {slide.subtitle && (
+              <p className="text-xs sm:text-sm lg:text-base text-charcoal/70 font-light max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                {slide.subtitle}
+              </p>
+            )}
 
             {/* CTAs */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-1">
               <Link href={slide.ctaPrimary.href}>
                 <button className="btn-aramya-terracotta group">
                   <span>{slide.ctaPrimary.text}</span>
@@ -192,7 +194,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
             </div>
 
             {/* Trust Badges */}
-            <div className="pt-6 sm:pt-8 border-t border-aramyaBorder grid grid-cols-3 gap-3 max-w-lg mx-auto lg:mx-0 text-left">
+            <div className="pt-5 sm:pt-6 border-t border-aramyaBorder grid grid-cols-3 gap-3 max-w-lg mx-auto lg:mx-0 text-left">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-terracotta shrink-0" />
                 <span className="text-[10px] sm:text-xs text-charcoal/80 font-medium">
@@ -214,19 +216,26 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
             </div>
           </div>
 
-          {/* Right Column: Editorial Visual */}
+          {/* Right Column: Hero Banner Image Artwork */}
           <div className="lg:col-span-5 relative flex justify-center">
-            <div className="relative w-full max-w-[380px] sm:max-w-[420px] aspect-3/4 rounded-3xl overflow-hidden bg-white border-2 border-aramyaBorder shadow-luxury-lg group">
-              <Image
-                src={slide.image}
-                alt={slide.title}
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 420px"
-                className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/30 via-transparent to-transparent" />
-            </div>
+            {slide.image ? (
+              <div className="relative w-full max-w-[440px] h-[360px] sm:h-[450px] lg:h-[500px] rounded-3xl overflow-hidden bg-white border-2 border-aramyaBorder shadow-luxury-lg group">
+                <img
+                  src={slide.image}
+                  alt={slide.title}
+                  loading="eager"
+                  className="w-full h-full object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-105"
+                  onError={(e) => {
+                    console.warn("Banner image failed to load:", slide.image);
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/20 via-transparent to-transparent pointer-events-none" />
+              </div>
+            ) : (
+              <div className="w-full max-w-[440px] h-[360px] sm:h-[450px] rounded-3xl bg-cream-100 border-2 border-dashed border-aramyaBorder flex items-center justify-center p-8 text-center text-charcoal/40 text-xs">
+                <span>No banner artwork uploaded</span>
+              </div>
+            )}
           </div>
         </div>
 
