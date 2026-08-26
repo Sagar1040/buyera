@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyRazorpaySignature } from "@/lib/razorpay";
-import { OrderStatus, PaymentStatus, PaymentMethod } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { OrderStatus, PaymentStatus, PaymentMethod, Role } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -48,34 +49,40 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Resolve or Create User / Guest User in DB
+    // 2. Resolve or Auto-Create User Account in DB
     let userId = session?.user?.id;
 
     if (!userId && session?.user?.email) {
       const foundUser = await prisma.user.findUnique({
-        where: { email: session.user.email },
+        where: { email: session.user.email.toLowerCase().trim() },
       });
       if (foundUser) userId = foundUser.id;
     }
 
     if (!userId) {
-      // Find guest user or create guest profile
-      const guestEmail =
+      const rawEmail =
         orderData.shippingAddress?.email ||
         session?.user?.email ||
         "guest@buyera.in";
+      const guestEmail = rawEmail.toLowerCase().trim();
+      const phone = orderData.shippingAddress?.phone || "";
 
       let user = await prisma.user.findUnique({
         where: { email: guestEmail },
       });
 
       if (!user) {
+        // Auto-create user account with secure hashed password (default: phone or BuyEra@2026)
+        const defaultSecret = phone.replace(/\D/g, "") || "BuyEra@2026";
+        const hashedPassword = await bcrypt.hash(defaultSecret, 10);
+
         user = await prisma.user.create({
           data: {
-            name: orderData.shippingAddress?.fullName || "Guest Customer",
+            name: orderData.shippingAddress?.fullName || "Valued Patron",
             email: guestEmail,
-            password: "GUEST_CHECKOUT_PLACEHOLDER",
-            phone: orderData.shippingAddress?.phone,
+            password: hashedPassword,
+            phone: phone || null,
+            role: Role.CUSTOMER,
           },
         });
       }

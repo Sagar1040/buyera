@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/utils";
-import { OrderStatus, PaymentStatus, PaymentMethod } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { OrderStatus, PaymentStatus, PaymentMethod, Role } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -78,22 +79,36 @@ export async function POST(req: Request) {
     const totalAmount = Math.max(0, calculatedSubtotal - discount + shippingCost);
     const orderNumber = generateOrderNumber();
 
-    // 3. Resolve or Create User in DB
+    // 3. Resolve or Auto-Create User Account in DB
     let userId = session?.user?.id;
 
+    if (!userId && session?.user?.email) {
+      const found = await prisma.user.findUnique({
+        where: { email: session.user.email.toLowerCase().trim() },
+      });
+      if (found) userId = found.id;
+    }
+
     if (!userId) {
-      const guestEmail = shippingAddress.email || "guest@buyera.in";
+      const rawEmail = shippingAddress.email || "guest@buyera.in";
+      const guestEmail = rawEmail.toLowerCase().trim();
+      const phone = shippingAddress.phone || "";
+
       let user = await prisma.user.findUnique({
         where: { email: guestEmail },
       });
 
       if (!user) {
+        const defaultSecret = phone.replace(/\D/g, "") || "BuyEra@2026";
+        const hashedPassword = await bcrypt.hash(defaultSecret, 10);
+
         user = await prisma.user.create({
           data: {
-            name: shippingAddress.fullName || "Guest Customer",
+            name: shippingAddress.fullName || "Valued Patron",
             email: guestEmail,
-            password: "GUEST_CHECKOUT_PLACEHOLDER",
-            phone: shippingAddress.phone,
+            password: hashedPassword,
+            phone: phone || null,
+            role: Role.CUSTOMER,
           },
         });
       }

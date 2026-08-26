@@ -274,76 +274,6 @@ export async function GET(req: Request) {
     const categorySlug = searchParams.get("category") || "ALL";
 
     try {
-      // 1. Auto-seed products into DB only if DB has zero products
-      const existingCount = await prisma.product.count();
-      if (existingCount === 0) {
-        for (const p of ALL_STORE_PRODUCTS) {
-          // Ensure category exists
-          const cat = await prisma.category.upsert({
-            where: { slug: p.categorySlug },
-            update: { name: p.category },
-            create: {
-              id: p.categoryId,
-              name: p.category,
-              slug: p.categorySlug,
-              description: p.category,
-              order: 1,
-              isActive: true,
-            },
-          });
-
-          await prisma.product.upsert({
-            where: { slug: p.slug },
-            update: {
-              name: p.name,
-              sku: p.sku,
-              price: p.price,
-              mrp: p.mrp,
-              categoryId: cat.id,
-              isActive: p.isActive,
-              isFeatured: p.isFeatured,
-              isNew: p.isNew,
-              isBestSeller: p.isBestSeller,
-            },
-            create: {
-              id: p.id,
-              name: p.name,
-              slug: p.slug,
-              sku: p.sku,
-              price: p.price,
-              mrp: p.mrp,
-              categoryId: cat.id,
-              description: p.description,
-              shortDesc: p.shortDesc,
-              fabricCare: p.fabricCare,
-              isActive: p.isActive,
-              isFeatured: p.isFeatured,
-              isNew: p.isNew,
-              isBestSeller: p.isBestSeller,
-              tags: p.tags,
-              images: {
-                create: p.images.map((url, idx) => ({
-                  url,
-                  order: idx,
-                  isPrimary: idx === 0,
-                })),
-              },
-              variants: {
-                create: p.variants.map((v) => ({
-                  id: v.id,
-                  size: v.size,
-                  color: v.color,
-                  colorHex: "#121212",
-                  stock: v.stock,
-                  sku: v.sku,
-                  price: p.price,
-                })),
-              },
-            },
-          });
-        }
-      }
-
       const where: any = {};
       if (categorySlug !== "ALL") {
         where.category = { slug: categorySlug };
@@ -366,57 +296,40 @@ export async function GET(req: Request) {
         },
       });
 
-      if (products.length > 0) {
-        const mapped = products.map((p) => {
-          const totalStock = p.variants.reduce((acc, v) => acc + (v.stock || 0), 0);
-          const primaryImg = p.images.find((i) => i.isPrimary)?.url || p.images[0]?.url || "";
-          return {
-            id: p.id,
-            name: p.name,
-            slug: p.slug,
-            sku: p.sku,
-            price: p.price,
-            mrp: p.mrp,
-            category: p.category?.name || "Uncategorized",
-            categoryId: p.categoryId,
-            categorySlug: p.category?.slug,
-            image: primaryImg,
-            images: p.images.map((img) => img.url),
-            totalStock,
-            variants: p.variants,
-            isActive: p.isActive,
-            isFeatured: p.isFeatured,
-            isNew: p.isNew,
-            isBestSeller: p.isBestSeller,
-            tags: p.tags,
-            description: p.description,
-            shortDesc: p.shortDesc,
-            fabricCare: p.fabricCare,
-            createdAt: p.createdAt,
-          };
-        });
+      const mapped = products.map((p) => {
+        const totalStock = p.variants.reduce((acc, v) => acc + (v.stock || 0), 0);
+        const primaryImg = p.images.find((i) => i.isPrimary)?.url || p.images[0]?.url || "";
+        return {
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          sku: p.sku,
+          price: p.price,
+          mrp: p.mrp,
+          category: p.category?.name || "Uncategorized",
+          categoryId: p.categoryId,
+          categorySlug: p.category?.slug,
+          image: primaryImg,
+          images: p.images.map((img) => img.url),
+          totalStock,
+          variants: p.variants,
+          isActive: p.isActive,
+          isFeatured: p.isFeatured,
+          isNew: p.isNew,
+          isBestSeller: p.isBestSeller,
+          tags: p.tags,
+          description: p.description,
+          shortDesc: p.shortDesc,
+          fabricCare: p.fabricCare,
+          createdAt: p.createdAt,
+        };
+      });
 
-        return NextResponse.json({ success: true, products: mapped });
-      }
+      return NextResponse.json({ success: true, products: mapped });
     } catch (dbErr) {
-      console.warn("Using fallback products due to DB error:", dbErr);
+      console.warn("Products DB fetch warning:", dbErr);
+      return NextResponse.json({ success: true, products: [] });
     }
-
-    let filtered = ALL_STORE_PRODUCTS;
-    if (categorySlug !== "ALL") {
-      filtered = filtered.filter((p) => p.categorySlug === categorySlug);
-    }
-    if (search) {
-      const s = search.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(s) ||
-          p.sku.toLowerCase().includes(s) ||
-          p.category.toLowerCase().includes(s)
-      );
-    }
-
-    return NextResponse.json({ success: true, products: filtered });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to fetch products" },
