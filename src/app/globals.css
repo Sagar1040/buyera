@@ -4,13 +4,16 @@
 
 @layer base {
   :root {
-    --charcoal: #121212;
-    --cream: #FBF9F5;
+    --charcoal: #1C1C1C;
+    --cream: #FAF7F2;
     --gold: #C5A880;
     --gold-dark: #A38051;
     --gold-light: #F0E7D4;
-    --canvas: #F7F7F7;
-    --border-color: #E9E5DE;
+    --canvas: #FAF7F2;
+    --border-color: #E8E2D9;
+    --sand: #EFE9E1;
+    --blush: #F9F1ED;
+    --sage: #E8ECE6;
   }
 
   * {
@@ -28,8 +31,6 @@
     color: var(--charcoal);
     font-family: var(--font-jakarta), 'Plus Jakarta Sans', Inter, sans-serif;
     overflow-x: hidden;
-    selection-background-color: #C5A880;
-    selection-color: #FFFFFF;
   }
 
   ::selection {
@@ -42,55 +43,72 @@
   /* Editorial Typography Styles */
   .font-editorial-heading {
     font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.015em;
   }
 
   .font-brand-badge {
     font-family: var(--font-cinzel), 'Cinzel', serif;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
   }
 
-  /* Luxury Button Classes */
-  .btn-luxury-primary {
-    @apply bg-charcoal text-white hover:bg-black font-sans uppercase tracking-widest text-xs py-3.5 px-6 rounded-none transition-all duration-300 shadow-luxury hover:shadow-luxury-lg active:scale-[0.98] border border-charcoal flex items-center justify-center gap-2;
+  /* Aramya Pill & Luxury Button Classes */
+  .btn-aramya-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-charcoal text-white hover:bg-black font-sans uppercase tracking-[0.18em] text-[11px] font-semibold py-3 px-7 rounded-full transition-all duration-300 shadow-sm hover:shadow-luxury active:scale-[0.98];
   }
 
-  .btn-luxury-gold {
-    @apply bg-gold text-charcoal hover:bg-gold-500 hover:text-white font-sans uppercase tracking-widest text-xs font-semibold py-3.5 px-6 rounded-none transition-all duration-300 shadow-gold-subtle hover:shadow-gold-glow active:scale-[0.98] border border-gold flex items-center justify-center gap-2;
+  .btn-aramya-gold {
+    @apply inline-flex items-center justify-center gap-2 bg-gold text-charcoal hover:bg-gold-500 hover:text-white font-sans uppercase tracking-[0.18em] text-[11px] font-bold py-3 px-7 rounded-full transition-all duration-300 shadow-gold-subtle hover:shadow-gold-glow active:scale-[0.98];
   }
 
-  .btn-luxury-outline {
-    @apply bg-transparent text-charcoal border border-charcoal/30 hover:border-charcoal hover:bg-charcoal hover:text-white font-sans uppercase tracking-widest text-xs py-3.5 px-6 rounded-none transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2;
+  .btn-aramya-outline {
+    @apply inline-flex items-center justify-center gap-2 bg-transparent text-charcoal border border-charcoal/30 hover:border-charcoal hover:bg-charcoal hover:text-white font-sans uppercase tracking-[0.18em] text-[11px] font-semibold py-3 px-7 rounded-full transition-all duration-300 active:scale-[0.98];
   }
 
-  .btn-luxury-ghost {
-    @apply bg-transparent text-charcoal/80 hover:text-charcoal hover:bg-cream-100/60 font-sans tracking-wider text-xs py-2 px-3 transition-all duration-200 flex items-center gap-1.5;
+  .btn-aramya-pill {
+    @apply inline-flex items-center justify-center gap-1.5 bg-white/80 backdrop-blur-md text-charcoal border border-stoneBorder hover:border-gold hover:text-gold-dark font-sans tracking-wider text-[11px] font-medium py-1.5 px-4 rounded-full transition-all duration-200;
   }
 
   /* Luxury Surface Cards */
   .card-luxury {
-    @apply bg-white border border-canvas-border shadow-card hover:shadow-luxury transition-all duration-300;
+    @apply bg-white/90 backdrop-blur-sm border border-stoneBorder rounded-2xl shadow-card hover:shadow-luxury-lg hover:border-gold/50 transition-all duration-500;
   }
 
   .card-glass {
-    background: rgba(251, 249, 245, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(233, 229, 222, 0.8);
+    background: rgba(250, 247, 242, 0.82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(232, 226, 217, 0.85);
+  }
+
+  .card-glass-white {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(232, 226, 217, 0.75);
   }
 
   .card-glass-dark {
-    background: rgba(18, 18, 18, 0.88);
+    background: rgba(28, 28, 28, 0.9);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(197, 168, 128, 0.2);
+    border: 1px solid rgba(197, 168, 128, 0.25);
+  }
+
+  /* Arched Editorial Frame */
+  .frame-arch {
+    border-radius: 8rem 8rem 1.5rem 1.5rem;
+  }
+
+  .frame-arch-sm {
+    border-radius: 4rem 4rem 1rem 1rem;
   }
 
   /* Gold Shimmer Text Effect */
   .text-gold-gradient {
     background: linear-gradient(135deg, #C5A880 0%, #E3CEAA 50%, #A38051 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
@@ -101,7 +119,7 @@
   .divider-luxury::before,
   .divider-luxury::after {
     content: '';
-    @apply flex-1 border-t border-canvas-border;
+    @apply flex-1 border-t border-stoneBorder;
   }
   .divider-luxury span {
     @apply px-4 text-gold text-xs tracking-widest uppercase;
@@ -115,14 +133,15 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #F7F7F7;
+  background: #FAF7F2;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D5B682;
-  border-radius: 0px;
+  background: #D8CBBA;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #A38051;
 }
+

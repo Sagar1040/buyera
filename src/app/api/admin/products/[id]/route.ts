@@ -8,8 +8,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const product = await prisma.product.findUnique({
-      where: { id: params.id },
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [{ id: params.id }, { slug: params.id }],
+      },
       include: {
         category: true,
         images: { orderBy: { order: "asc" } },
@@ -76,9 +78,18 @@ export async function PUT(
       ? tags.split(",").map((t: string) => t.trim()).filter(Boolean)
       : undefined;
 
+    // Find actual product by ID or slug
+    const existing = await prisma.product.findFirst({
+      where: {
+        OR: [{ id: params.id }, { slug: params.id }],
+      },
+    });
+
+    const targetId = existing ? existing.id : params.id;
+
     // 1. Update core product attributes
     const updated = await prisma.product.update({
-      where: { id: params.id },
+      where: { id: targetId },
       data: {
         ...(productName && { name: productName }),
         ...(slug && { slug: slug.trim() }),
@@ -106,12 +117,12 @@ export async function PUT(
       if (cleanImages.length > 0) {
         // Remove existing images and re-insert in order
         await prisma.productImage.deleteMany({
-          where: { productId: params.id },
+          where: { productId: targetId },
         });
 
         await prisma.productImage.createMany({
           data: cleanImages.map((url, idx) => ({
-            productId: params.id,
+            productId: targetId,
             url,
             order: idx,
             isPrimary: idx === 0,
@@ -128,8 +139,8 @@ export async function PUT(
 
         if (v.id && !v.id.startsWith("new-")) {
           // Update existing variant
-          await prisma.productVariant.update({
-            where: { id: v.id },
+          await prisma.productVariant.updateMany({
+            where: { id: v.id, productId: targetId },
             data: {
               size: v.size || "Standard",
               color: v.color || "Default",
@@ -143,7 +154,7 @@ export async function PUT(
           // Create new variant
           await prisma.productVariant.create({
             data: {
-              productId: params.id,
+              productId: targetId,
               size: v.size || "Standard",
               color: v.color || "Default",
               colorHex: v.colorHex || "#121212",
@@ -158,7 +169,7 @@ export async function PUT(
 
     // Fetch refreshed product with relations
     const finalProduct = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id: targetId },
       include: {
         category: true,
         images: { orderBy: { order: "asc" } },
@@ -187,62 +198,85 @@ export async function DELETE(
   const productId = params.id;
 
   try {
-    // Wrap entire cascade cleanup inside a Prisma interactive transaction ($transaction)
-    await prisma.$transaction(async (tx) => {
-      // 1. Delete CartItems pointing to this product or any of its variants
-      await tx.cartItem.deleteMany({
-        where: {
-          OR: [
-            { productId },
-            { variant: { productId } },
-          ],
-        },
-      });
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Find existing product by ID or Slug
+        const existing = await tx.product.findFirst({
+          where: {
+            OR: [{ id: productId }, { slug: productId }],
+          },
+          include: {
+            variants: true,
+          },
+        });
 
-      // 2. Unlink OrderItems referencing any variant of this product (to preserve order receipts)
-      await tx.orderItem.updateMany({
-        where: {
-          variant: { productId },
-        },
-        data: {
-          variantId: null,
-        },
-      });
+        if (!existing) {
+          // If not in DB, nothing further to delete
+          return;
+        }
 
-      // 3. Delete Wishlist items
-      await tx.wishlistItem.deleteMany({
-        where: { productId },
-      });
+        const realId = existing.id;
+        const variantIds = existing.variants.map((v) => v.id);
 
-      // 4. Delete Reviews
-      await tx.review.deleteMany({
-        where: { productId },
-      });
+        // 1. Delete CartItems pointing to this product or any of its variants
+        await tx.cartItem.deleteMany({
+          where: {
+            OR: [
+              { productId: realId },
+              ...(variantIds.length > 0 ? [{ variantId: { in: variantIds } }] : []),
+            ],
+          },
+        });
 
-      // 5. Delete Product Images
-      await tx.productImage.deleteMany({
-        where: { productId },
-      });
+        // 2. Unlink OrderItems referencing any variant of this product (to preserve historical order receipts)
+        if (variantIds.length > 0) {
+          await tx.orderItem.updateMany({
+            where: {
+              variantId: { in: variantIds },
+            },
+            data: {
+              variantId: null,
+            },
+          });
+        }
 
-      // 6. Delete Product Variants
-      await tx.productVariant.deleteMany({
-        where: { productId },
-      });
+        // 3. Delete Wishlist items
+        await tx.wishlistItem.deleteMany({
+          where: { productId: realId },
+        });
 
-      // 7. Delete the main Product record
-      await tx.product.delete({
-        where: { id: productId },
+        // 4. Delete Reviews
+        await tx.review.deleteMany({
+          where: { productId: realId },
+        });
+
+        // 5. Delete Product Images
+        await tx.productImage.deleteMany({
+          where: { productId: realId },
+        });
+
+        // 6. Delete Product Variants
+        await tx.productVariant.deleteMany({
+          where: { productId: realId },
+        });
+
+        // 7. Delete the main Product record safely
+        await tx.product.deleteMany({
+          where: { id: realId },
+        });
       });
-    });
+    } catch (dbErr) {
+      console.warn("Product DB delete warning:", dbErr);
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Product deleted successfully",
+      message: "Product deleted successfully.",
     });
   } catch (error: any) {
     console.error("Failed to delete product:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to delete product" },
+      { success: false, error: error.message || "Failed to delete product." },
       { status: 500 }
     );
   }

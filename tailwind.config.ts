@@ -30,23 +30,38 @@ const config: Config = {
           200: "#1E1E1E",
           300: "#1A1A1A",
           400: "#161616",
-          DEFAULT: "#121212", // Primary Brand Black
+          DEFAULT: "#1C1C1C", // Refined Brand Black
           900: "#0D0D0D",
           950: "#080808",
         },
-        // Warm Cream / Ivory Surfaces
+        // Warm Aramya Neutral Palette (Porcelain, Cream, Linen, Sand, Blush, Sage)
+        warmBeige: "#FDFBF7",
         cream: {
           50: "#FDFCF9",
-          DEFAULT: "#FBF9F5", // Secondary Surface Ivory
-          100: "#F7F3EB",
-          200: "#EFE8DC",
-          300: "#E4D9C7",
-          400: "#D6C6AE",
+          DEFAULT: "#FAF7F2", // Core Aramya Cream Canvas
+          100: "#F5F0EB",
+          200: "#EFE9E1",
+          300: "#E6DDCE",
+          400: "#D8CBBA",
           500: "#C4AF90",
         },
+        softSand: "#EFE9E1",
+        blush: {
+          50: "#FCF8F6",
+          DEFAULT: "#F9F1ED",
+          100: "#F4E5DE",
+          200: "#E8CEC2",
+        },
+        sage: {
+          50: "#F4F6F4",
+          DEFAULT: "#E8ECE6",
+          100: "#DBE2D9",
+          200: "#C1CEC0",
+        },
+        stoneBorder: "#E8E2D9",
         // Muted Luxury Gold Accent Palette
         gold: {
-          50: "#F9F5EE",
+          50: "#FAF6EF",
           100: "#F0E7D4",
           200: "#E3CEAA",
           300: "#D5B682",
@@ -59,15 +74,16 @@ const config: Config = {
         },
         // Off-White Background Canvas
         canvas: {
-          DEFAULT: "#F7F7F7",
-          subtle: "#F4F4F4",
-          border: "#E9E5DE",
+          DEFAULT: "#FAF7F2",
+          subtle: "#F5F0EB",
+          border: "#E8E2D9",
           card: "#FFFFFF",
         },
         // Status Colors
         emerald: {
           500: "#10B981",
           600: "#059669",
+          700: "#047857",
         },
         rose: {
           500: "#F43F5E",
@@ -79,18 +95,28 @@ const config: Config = {
         sans: ["var(--font-jakarta)", "Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
         display: ["var(--font-cinzel)", "Cinzel", "Playfair Display", "serif"],
       },
+      borderRadius: {
+        "2xl": "1rem",
+        "3xl": "1.5rem",
+        "4xl": "2rem",
+        "5xl": "2.5rem",
+        arch: "8rem 8rem 1.5rem 1.5rem",
+      },
       boxShadow: {
-        luxury: "0 10px 30px -10px rgba(18, 18, 18, 0.08)",
-        "luxury-lg": "0 20px 40px -15px rgba(18, 18, 18, 0.12)",
+        luxury: "0 10px 30px -10px rgba(28, 28, 28, 0.06)",
+        "luxury-lg": "0 20px 45px -12px rgba(28, 28, 28, 0.09)",
         "gold-glow": "0 0 25px rgba(197, 168, 128, 0.28)",
         "gold-subtle": "0 4px 20px rgba(197, 168, 128, 0.15)",
-        card: "0 2px 12px -2px rgba(18, 18, 18, 0.04)",
+        card: "0 2px 14px -2px rgba(28, 28, 28, 0.03)",
+        soft: "0 4px 24px 0 rgba(0, 0, 0, 0.04)",
       },
       backgroundImage: {
         "gold-gradient": "linear-gradient(135deg, #D5B682 0%, #C5A880 50%, #A38051 100%)",
         "gold-shimmer": "linear-gradient(90deg, #C5A880 0%, #F0E7D4 50%, #C5A880 100%)",
-        "dark-gradient": "linear-gradient(180deg, #1A1A1A 0%, #121212 100%)",
-        "cream-gradient": "linear-gradient(180deg, #FFFFFF 0%, #FBF9F5 100%)",
+        "dark-gradient": "linear-gradient(180deg, #242424 0%, #161616 100%)",
+        "cream-gradient": "linear-gradient(180deg, #FFFFFF 0%, #FAF7F2 100%)",
+        "aramya-hero": "radial-gradient(ellipse at 70% 30%, rgba(249, 241, 237, 0.9) 0%, rgba(250, 247, 242, 0.98) 60%, #FAF7F2 100%)",
+        "aramya-texture": "radial-gradient(circle at 10% 20%, rgba(232, 236, 230, 0.5) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(249, 241, 237, 0.6) 0%, transparent 50%)",
       },
       letterSpacing: {
         widest: "0.2em",
@@ -106,15 +132,15 @@ const config: Config = {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        slideInRight: {
-          from: { transform: "translateX(100%)" },
-          to: { transform: "translateX(0)" },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-6px)" },
         },
       },
       animation: {
         shimmer: "shimmer 2s infinite",
-        fadeIn: "fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-        slideInRight: "slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+        fadeIn: "fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+        float: "float 4s ease-in-out infinite",
       },
     },
   },

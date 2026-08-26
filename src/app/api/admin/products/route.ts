@@ -260,71 +260,74 @@ export async function GET(req: Request) {
     const categorySlug = searchParams.get("category") || "ALL";
 
     try {
-      // 1. Auto-seed missing products into DB if DB is empty or has fewer products
-      for (const p of ALL_STORE_PRODUCTS) {
-        // Ensure category exists
-        const cat = await prisma.category.upsert({
-          where: { slug: p.categorySlug },
-          update: { name: p.category },
-          create: {
-            id: p.categoryId,
-            name: p.category,
-            slug: p.categorySlug,
-            description: p.category,
-            order: 1,
-            isActive: true,
-          },
-        });
+      // 1. Auto-seed products into DB only if DB has zero products
+      const existingCount = await prisma.product.count();
+      if (existingCount === 0) {
+        for (const p of ALL_STORE_PRODUCTS) {
+          // Ensure category exists
+          const cat = await prisma.category.upsert({
+            where: { slug: p.categorySlug },
+            update: { name: p.category },
+            create: {
+              id: p.categoryId,
+              name: p.category,
+              slug: p.categorySlug,
+              description: p.category,
+              order: 1,
+              isActive: true,
+            },
+          });
 
-        await prisma.product.upsert({
-          where: { slug: p.slug },
-          update: {
-            name: p.name,
-            sku: p.sku,
-            price: p.price,
-            mrp: p.mrp,
-            categoryId: cat.id,
-            isActive: p.isActive,
-            isFeatured: p.isFeatured,
-            isNew: p.isNew,
-            isBestSeller: p.isBestSeller,
-          },
-          create: {
-            id: p.id,
-            name: p.name,
-            slug: p.slug,
-            sku: p.sku,
-            price: p.price,
-            mrp: p.mrp,
-            categoryId: cat.id,
-            description: p.description,
-            shortDesc: p.shortDesc,
-            fabricCare: p.fabricCare,
-            isActive: p.isActive,
-            isFeatured: p.isFeatured,
-            isNew: p.isNew,
-            isBestSeller: p.isBestSeller,
-            tags: p.tags,
-            images: {
-              create: p.images.map((url, idx) => ({
-                url,
-                order: idx,
-                isPrimary: idx === 0,
-              })),
+          await prisma.product.upsert({
+            where: { slug: p.slug },
+            update: {
+              name: p.name,
+              sku: p.sku,
+              price: p.price,
+              mrp: p.mrp,
+              categoryId: cat.id,
+              isActive: p.isActive,
+              isFeatured: p.isFeatured,
+              isNew: p.isNew,
+              isBestSeller: p.isBestSeller,
             },
-            variants: {
-              create: p.variants.map((v) => ({
-                id: v.id,
-                size: v.size,
-                color: v.color,
-                colorHex: "#121212",
-                stock: v.stock,
-                sku: v.sku,
-                price: p.price,
-              })),
+            create: {
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              sku: p.sku,
+              price: p.price,
+              mrp: p.mrp,
+              categoryId: cat.id,
+              description: p.description,
+              shortDesc: p.shortDesc,
+              fabricCare: p.fabricCare,
+              isActive: p.isActive,
+              isFeatured: p.isFeatured,
+              isNew: p.isNew,
+              isBestSeller: p.isBestSeller,
+              tags: p.tags,
+              images: {
+                create: p.images.map((url, idx) => ({
+                  url,
+                  order: idx,
+                  isPrimary: idx === 0,
+                })),
+              },
+              variants: {
+                create: p.variants.map((v) => ({
+                  id: v.id,
+                  size: v.size,
+                  color: v.color,
+                  colorHex: "#121212",
+                  stock: v.stock,
+                  sku: v.sku,
+                  price: p.price,
+                })),
+              },
             },
-          },
-        });
+          });
+        }
       }
 
       const where: any = {};

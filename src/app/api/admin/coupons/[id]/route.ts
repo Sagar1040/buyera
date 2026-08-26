@@ -82,8 +82,8 @@ export async function DELETE(
         where: { couponId: params.id },
       });
 
-      // 2. Delete the coupon
-      await prisma.coupon.delete({
+      // 2. Delete the coupon safely
+      await prisma.coupon.deleteMany({
         where: { id: params.id },
       });
     } catch (dbErr) {

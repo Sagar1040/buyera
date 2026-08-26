@@ -51,8 +51,10 @@ export async function DELETE(
 ) {
   try {
     try {
-      await prisma.category.delete({
-        where: { id: params.id },
+      await prisma.category.deleteMany({
+        where: {
+          OR: [{ id: params.id }, { slug: params.id }],
+        },
       });
     } catch (dbErr) {
       console.warn("Category DB delete error:", dbErr);

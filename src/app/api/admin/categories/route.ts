@@ -81,27 +81,30 @@ const ALL_STORE_CATEGORIES = [
 export async function GET() {
   try {
     try {
-      // Auto-sync missing categories in DB
-      for (const cat of ALL_STORE_CATEGORIES) {
-        await prisma.category.upsert({
-          where: { slug: cat.slug },
-          update: {
-            name: cat.name,
-            imageUrl: cat.imageUrl,
-            description: cat.description,
-            order: cat.order,
-          },
-          create: {
-            id: cat.id,
-            name: cat.name,
-            slug: cat.slug,
-            description: cat.description,
-            imageUrl: cat.imageUrl,
-            bannerUrl: cat.bannerUrl,
-            isActive: cat.isActive,
-            order: cat.order,
-          },
-        });
+      // Auto-sync missing categories in DB only if empty
+      const existingCatCount = await prisma.category.count();
+      if (existingCatCount === 0) {
+        for (const cat of ALL_STORE_CATEGORIES) {
+          await prisma.category.upsert({
+            where: { slug: cat.slug },
+            update: {
+              name: cat.name,
+              imageUrl: cat.imageUrl,
+              description: cat.description,
+              order: cat.order,
+            },
+            create: {
+              id: cat.id,
+              name: cat.name,
+              slug: cat.slug,
+              description: cat.description,
+              imageUrl: cat.imageUrl,
+              bannerUrl: cat.bannerUrl,
+              isActive: cat.isActive,
+              order: cat.order,
+            },
+          });
+        }
       }
 
       const categories = await prisma.category.findMany({

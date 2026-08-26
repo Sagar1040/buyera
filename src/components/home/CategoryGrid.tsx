@@ -73,50 +73,59 @@ const categories: CategoryStory[] = [
 
 export function CategoryGrid() {
   return (
-    <section className="py-16 bg-cream-50/50 border-b border-canvas-border">
-      <div className="container mx-auto px-4 lg:px-8">
+    <section className="py-16 sm:py-20 bg-warmBeige/60 border-b border-stoneBorder/60 relative overflow-hidden">
+      {/* Background Soft Blobs */}
+      <div className="absolute top-1/2 left-0 w-80 h-80 bg-sage/40 rounded-full blur-3xl -translate-y-1/2 pointer-events-none" />
+      <div className="absolute top-1/2 right-0 w-80 h-80 bg-blush/50 rounded-full blur-3xl -translate-y-1/2 pointer-events-none" />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Heading */}
-        <div className="text-center max-w-xl mx-auto mb-12 space-y-2">
-          <span className="text-[10px] tracking-[0.25em] uppercase text-gold font-brand-badge font-semibold">
+        <div className="text-center max-w-xl mx-auto mb-12 sm:mb-16 space-y-2.5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/90 backdrop-blur-sm text-[10px] tracking-[0.22em] uppercase text-charcoal/70 font-brand-badge font-bold rounded-full border border-stoneBorder">
+            <Sparkles className="w-3 h-3 text-gold" />
             CURATED DEPARTMENTS
           </span>
-          <h2 className="font-editorial-heading text-2xl sm:text-3xl text-charcoal">
-            Shop by Category
+          <h2 className="font-editorial-heading text-2xl sm:text-4xl text-charcoal font-normal">
+            Curated by Silhouette & Occasion
           </h2>
-          <p className="text-xs text-charcoal/60 font-light">
-            Discover hand-curated modest silhouettes crafted with premium fabrics and exquisite artisanal tailoring.
+          <p className="text-xs sm:text-sm text-charcoal/60 font-light leading-relaxed">
+            Discover bespoke modest silhouettes crafted with certified Grade-A fabrics and exquisite artisanal tailoring.
           </p>
         </div>
 
-        {/* Circular / Luxury Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8">
+        {/* Aesthetic Arched Cards Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
           {categories.map((cat) => (
             <Link
               key={cat.id}
               href={cat.href}
-              className="group flex flex-col items-center text-center"
+              className="group flex flex-col items-center text-center bg-white/70 backdrop-blur-sm p-3.5 sm:p-4 rounded-3xl border border-stoneBorder/80 transition-all duration-500 hover:bg-white hover:border-gold/60 hover:shadow-luxury hover:-translate-y-1"
             >
-              {/* Image Circle with Metallic Ring on Hover */}
-              <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-cream-200 border-2 border-canvas-border shadow-sm group-hover:border-gold group-hover:shadow-luxury transition-all duration-300 transform group-hover:scale-105">
+              {/* Arched Top Image Container */}
+              <div className="relative w-full aspect-[4/5] rounded-t-[3.5rem] rounded-b-xl overflow-hidden bg-cream-200 border border-stoneBorder/60 shadow-xs">
                 <Image
                   src={cat.image}
                   alt={cat.name}
                   fill
-                  sizes="(max-width: 768px) 120px, 160px"
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  sizes="(max-width: 768px) 150px, 220px"
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-charcoal/10 group-hover:bg-transparent transition-colors" />
+                
+                {/* Floating Tag Pill */}
+                <div className="absolute bottom-2 inset-x-2 flex justify-center">
+                  <span className="px-2 py-0.5 bg-white/90 backdrop-blur-md text-[8px] uppercase tracking-widest text-charcoal font-bold rounded-full shadow-xs">
+                    {cat.tag}
+                  </span>
+                </div>
               </div>
 
               {/* Text Info */}
-              <div className="mt-3.5 space-y-0.5">
-                <span className="text-[9px] uppercase tracking-widest text-gold-dark font-bold">
-                  {cat.tag}
-                </span>
-                <h3 className="text-xs sm:text-sm font-semibold text-charcoal group-hover:text-gold transition-colors line-clamp-1">
+              <div className="mt-3 space-y-0.5 w-full">
+                <h3 className="text-xs sm:text-sm font-semibold text-charcoal group-hover:text-gold-dark transition-colors line-clamp-1">
                   {cat.name}
                 </h3>
-                <p className="text-[10px] text-charcoal/50 font-light">
+                <p className="text-[10px] text-charcoal/45 font-light">
                   {cat.count}
                 </p>
               </div>

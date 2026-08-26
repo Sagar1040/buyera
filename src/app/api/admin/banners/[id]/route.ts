@@ -64,7 +64,7 @@ export async function DELETE(
 ) {
   try {
     try {
-      await prisma.banner.delete({
+      await prisma.banner.deleteMany({
         where: { id: params.id },
       });
     } catch (dbErr) {
