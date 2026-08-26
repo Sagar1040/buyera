@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Sparkles } from "lucide-react";
@@ -14,7 +14,7 @@ interface CategoryStory {
   href: string;
 }
 
-const categories: CategoryStory[] = [
+const DEFAULT_CATEGORIES: CategoryStory[] = [
   {
     id: "cat-1",
     name: "Abayas",
@@ -22,7 +22,7 @@ const categories: CategoryStory[] = [
     tag: "DUBAI EDIT",
     image:
       "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
-    href: "/category/abayas",
+    href: "/shop?category=abayas",
   },
   {
     id: "cat-2",
@@ -31,7 +31,7 @@ const categories: CategoryStory[] = [
     tag: "MEDINA SILK",
     image:
       "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop",
-    href: "/category/hijabs",
+    href: "/shop?category=hijabs",
   },
   {
     id: "cat-3",
@@ -40,7 +40,7 @@ const categories: CategoryStory[] = [
     tag: "PURE LAWN",
     image:
       "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop",
-    href: "/category/pakistani-churidars",
+    href: "/shop?category=pakistani-churidars",
   },
   {
     id: "cat-4",
@@ -49,16 +49,16 @@ const categories: CategoryStory[] = [
     tag: "EMBELLISHED",
     image:
       "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop",
-    href: "/shop?tag=kaftan",
+    href: "/shop?category=royal-kaftans",
   },
   {
     id: "cat-5",
-    name: "Co-ords",
+    name: "Co-ords & Dresses",
     count: "24+ Styles",
     tag: "MODERN FIT",
     image:
       "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
-    href: "/shop?cat=modest-wear",
+    href: "/shop?category=islamic-dresses",
   },
   {
     id: "cat-6",
@@ -67,11 +67,39 @@ const categories: CategoryStory[] = [
     tag: "HAUTE COUTURE",
     image:
       "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=800&auto=format&fit=crop",
-    href: "/category/islamic-dresses",
+    href: "/shop?category=islamic-dresses",
   },
 ];
 
 export function CategoryGrid() {
+  const [catList, setCatList] = useState<CategoryStory[]>(DEFAULT_CATEGORIES);
+
+  useEffect(() => {
+    fetch("/api/admin/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          const mapped = data.categories
+            .filter((c: any) => c.isActive !== false)
+            .map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              count: "Curated Edit",
+              tag: "EXCLUSIVE",
+              image:
+                c.imageUrl ||
+                "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
+              href: `/shop?category=${c.slug}`,
+            }));
+
+          if (mapped.length > 0) {
+            setCatList(mapped);
+          }
+        }
+      })
+      .catch((err) => console.warn("Live categories fetch notice:", err));
+  }, []);
+
   return (
     <section className="py-16 sm:py-20 bg-cream/70 border-b border-aramyaBorder relative overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -91,7 +119,7 @@ export function CategoryGrid() {
 
         {/* Circular / Arch Category Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 sm:gap-6">
-          {categories.map((cat) => (
+          {catList.map((cat) => (
             <Link
               key={cat.id}
               href={cat.href}
