@@ -1,7 +1,21 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+function triggerRevalidation(slug?: string) {
+  try {
+    revalidatePath("/", "layout");
+    revalidatePath("/shop", "page");
+    revalidatePath("/admin/products", "page");
+    if (slug) {
+      revalidatePath(`/product/${slug}`, "page");
+    }
+  } catch (err) {
+    console.warn("Cache revalidation notice:", err);
+  }
+}
 
 const ALL_STORE_PRODUCTS = [
   {
@@ -489,6 +503,8 @@ export async function POST(req: Request) {
           variants: true,
         },
       });
+
+      triggerRevalidation(newProduct.slug);
 
       return NextResponse.json({
         success: true,

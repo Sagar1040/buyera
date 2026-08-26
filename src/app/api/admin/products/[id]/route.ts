@@ -1,8 +1,22 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { deleteFromSupabase } from "@/lib/supabase-storage";
 
 export const dynamic = "force-dynamic";
+
+function triggerRevalidation(slug?: string) {
+  try {
+    revalidatePath("/", "layout");
+    revalidatePath("/shop", "page");
+    revalidatePath("/admin/products", "page");
+    if (slug) {
+      revalidatePath(`/product/${slug}`, "page");
+    }
+  } catch (err) {
+    console.warn("Cache revalidation notice:", err);
+  }
+}
 
 export async function GET(
   req: Request,
@@ -178,6 +192,8 @@ export async function PUT(
       },
     });
 
+    triggerRevalidation(finalProduct?.slug);
+
     return NextResponse.json({
       success: true,
       message: "Product updated successfully.",
@@ -187,6 +203,63 @@ export async function PUT(
     console.error("Product update error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to update product." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await req.json();
+    const { isActive, isFeatured, isNew, isBestSeller, stock } = body;
+
+    const existing = await prisma.product.findFirst({
+      where: {
+        OR: [{ id: params.id }, { slug: params.id }],
+      },
+      include: { variants: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    const updateData: any = {};
+    if (isActive !== undefined) updateData.isActive = Boolean(isActive);
+    if (isFeatured !== undefined) updateData.isFeatured = Boolean(isFeatured);
+    if (isNew !== undefined) updateData.isNew = Boolean(isNew);
+    if (isBestSeller !== undefined) updateData.isBestSeller = Boolean(isBestSeller);
+
+    const updated = await prisma.product.update({
+      where: { id: existing.id },
+      data: updateData,
+    });
+
+    // If stock override provided, update primary/all variants
+    if (stock !== undefined && existing.variants.length > 0) {
+      await prisma.productVariant.updateMany({
+        where: { productId: existing.id },
+        data: { stock: Number(stock) },
+      });
+    }
+
+    triggerRevalidation(existing.slug);
+
+    return NextResponse.json({
+      success: true,
+      message: "Product status updated successfully.",
+      product: updated,
+    });
+  } catch (error: any) {
+    console.error("Product quick PATCH error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to update status." },
       { status: 500 }
     );
   }
@@ -281,6 +354,8 @@ export async function DELETE(
     } catch (dbErr) {
       console.warn("Product DB delete warning:", dbErr);
     }
+
+    triggerRevalidation();
 
     return NextResponse.json({
       success: true,

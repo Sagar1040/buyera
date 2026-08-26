@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingBag, Truck, ShieldCheck, ChevronDown, Check } from "lucide-react";
@@ -22,13 +22,68 @@ export default function ProductDetailPage({
   const [selectedSize, setSelectedSize] = useState("56 (M)");
   const [selectedColor, setSelectedColor] = useState("Emerald Green");
   const [selectedImage, setSelectedImage] = useState(0);
+  const [productData, setProductData] = useState<ProductType | null>(null);
+  const [loading, setLoading] = useState(true);
   const [added, setAdded] = useState(false);
   const [descOpen, setDescOpen] = useState(true);
   const [careOpen, setCareOpen] = useState(false);
   const [shippingOpen, setShippingOpen] = useState(false);
 
-  // Mock product object matching ProductType
-  const product: ProductType = {
+  useEffect(() => {
+    fetch(`/api/admin/products/${params.slug}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data.product) {
+          const p = data.product;
+          setProductData({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            sku: p.sku,
+            price: p.price,
+            mrp: p.mrp || p.price * 1.3,
+            description: p.description || "",
+            shortDesc: p.shortDesc,
+            fabricCare: p.fabricCare,
+            categoryId: p.categoryId,
+            category: p.category || { id: "cat-1", name: "Luxury Modest", slug: "abayas", isActive: true, order: 1 },
+            images: (p.images && p.images.length > 0)
+              ? p.images.map((img: any, idx: number) => ({
+                  id: img.id || `img-${idx}`,
+                  url: img.url || img,
+                  isPrimary: img.isPrimary || idx === 0,
+                  order: img.order || idx,
+                }))
+              : [
+                  {
+                    id: "img-1",
+                    url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200&auto=format&fit=crop",
+                    isPrimary: true,
+                    order: 1,
+                  },
+                ],
+            variants: p.variants || [],
+            isActive: p.isActive !== false,
+            isFeatured: Boolean(p.isFeatured),
+            isNew: Boolean(p.isNew),
+            isBestSeller: Boolean(p.isBestSeller),
+            tags: p.tags || [],
+            createdAt: p.createdAt || new Date().toISOString(),
+            updatedAt: p.updatedAt || new Date().toISOString(),
+          });
+
+          if (p.variants && p.variants.length > 0) {
+            setSelectedSize(p.variants[0].size || "Standard");
+            setSelectedColor(p.variants[0].color || "Default");
+          }
+        }
+      })
+      .catch((err) => console.warn("Live product fetch error:", err))
+      .finally(() => setLoading(false));
+  }, [params.slug]);
+
+  // Fallback / active product
+  const product: ProductType = productData || {
     id: "prod-1",
     name: "Royal Emerald Hand-Embroidered Abaya",
     slug: params.slug,
@@ -58,12 +113,22 @@ export default function ProductDetailPage({
     updatedAt: new Date().toISOString(),
   };
 
-  const sizes = ["52 (XS)", "54 (S)", "56 (M)", "58 (L)", "60 (XL)"];
-  const colors = [
-    { name: "Emerald Green", hex: "#0F3827" },
-    { name: "Midnight Obsidian", hex: "#121212" },
-    { name: "Muted Champagne", hex: "#C5A880" },
-  ];
+  const dynamicSizes = productData?.variants?.map((v) => v.size).filter(Boolean) || [];
+  const sizes = dynamicSizes.length > 0
+    ? Array.from(new Set(dynamicSizes))
+    : ["52 (XS)", "54 (S)", "56 (M)", "58 (L)", "60 (XL)"];
+
+  const dynamicColors = productData?.variants?.map((v) => ({
+    name: v.color || "Default",
+    hex: v.colorHex || "#121212",
+  })) || [];
+  const colors = dynamicColors.length > 0
+    ? dynamicColors.filter((c, i, self) => i === self.findIndex((t) => t.name === c.name))
+    : [
+        { name: "Emerald Green", hex: "#0F3827" },
+        { name: "Midnight Obsidian", hex: "#121212" },
+        { name: "Muted Champagne", hex: "#C5A880" },
+      ];
 
   const discount = calculateDiscount(product.mrp, product.price);
   const isFavorited = isInWishlist(product.id);

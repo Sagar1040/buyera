@@ -82,19 +82,63 @@ export default function AdminProductsPage() {
   };
 
   const handleToggleStatus = async (productId: string, current: boolean) => {
+    // Optimistic update
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, isActive: !current } : p))
+    );
+
     try {
-      const res = await fetch(`/api/admin/products/${productId}/stock`, {
+      const res = await fetch(`/api/admin/products/${productId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !current }),
       });
-      setProducts((prev) =>
-        prev.map((p) => (p.id === productId ? { ...p, isActive: !current } : p))
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update status");
+
+      setSuccessMsg(
+        !current
+          ? "Product published to live storefront."
+          : "Product un-published (set to draft)."
       );
-      setSuccessMsg("Product visibility status updated.");
+      router.refresh();
       setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (err: any) {
+      // Revert optimistic update on failure
+      setProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, isActive: current } : p))
+      );
+      setErrorMsg(err.message || "Failed to update product status.");
+      setTimeout(() => setErrorMsg(null), 4000);
+    }
+  };
+
+  const handleToggleStockStatus = async (productId: string, hasStock: boolean) => {
+    const newStock = hasStock ? 0 : 25;
+    try {
+      const res = await fetch(`/api/admin/products/${productId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stock: newStock }),
+      });
+      if (res.ok) {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId
+              ? {
+                  ...p,
+                  totalStock: newStock,
+                  variants: p.variants?.map((v: any) => ({ ...v, stock: newStock })),
+                }
+              : p
+          )
+        );
+        setSuccessMsg(newStock === 0 ? "Product marked as Out of Stock." : "Product marked as In Stock (25 units).");
+        router.refresh();
+        setTimeout(() => setSuccessMsg(null), 3000);
+      }
     } catch (err) {
-      setErrorMsg("Failed to update status.");
+      setErrorMsg("Failed to update stock status.");
     }
   };
 
@@ -344,38 +388,59 @@ export default function AdminProductsPage() {
                       </td>
 
                       <td className="py-3 px-4">
-                        <button
-                          onClick={() => setStockEditingProduct(p)}
-                          className="flex items-center gap-1.5 hover:text-gold-dark font-medium transition-colors"
-                        >
-                          <span
-                            className={`inline-block w-2 h-2 rounded-full ${
-                              totalInventory === 0
-                                ? "bg-rose-500"
-                                : totalInventory < 10
-                                ? "bg-amber-500"
-                                : "bg-emerald-500"
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setStockEditingProduct(p)}
+                            className="flex items-center gap-1.5 hover:text-terracotta font-medium transition-colors"
+                            title="Click to edit variant stock levels"
+                          >
+                            <span
+                              className={`inline-block w-2 h-2 rounded-full ${
+                                totalInventory === 0
+                                  ? "bg-rose-500"
+                                  : totalInventory < 10
+                                  ? "bg-amber-500"
+                                  : "bg-emerald-500"
+                              }`}
+                            />
+                            <span className="font-mono font-bold text-xs">
+                              {totalInventory}
+                            </span>
+                            <span className="text-[10px] text-charcoal/40">
+                              ({p.variants?.length || 0} var)
+                            </span>
+                          </button>
+
+                          <button
+                            onClick={() => handleToggleStockStatus(p.id, totalInventory > 0)}
+                            className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider transition-colors ${
+                              totalInventory > 0
+                                ? "bg-emerald-50 text-emerald-700 hover:bg-rose-50 hover:text-rose-700"
+                                : "bg-rose-50 text-rose-700 hover:bg-emerald-50 hover:text-emerald-700"
                             }`}
-                          />
-                          <span className="font-mono font-bold">
-                            {totalInventory} units
-                          </span>
-                          <span className="text-[10px] text-charcoal/40">
-                            ({p.variants?.length || 0} variants)
-                          </span>
-                        </button>
+                            title="Toggle in-stock / out-of-stock"
+                          >
+                            {totalInventory > 0 ? "In Stock" : "Out of Stock"}
+                          </button>
+                        </div>
                       </td>
 
                       <td className="py-3 px-4">
                         <button
                           onClick={() => handleToggleStatus(p.id, p.isActive)}
-                          className={`text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider transition-colors border ${
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider transition-all border flex items-center gap-1.5 ${
                             p.isActive
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                              : "bg-charcoal/5 text-charcoal/50 border-charcoal/20 hover:bg-charcoal/10"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 shadow-xs"
+                              : "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
                           }`}
+                          title="Click to toggle publish status"
                         >
-                          {p.isActive ? "Published" : "Draft (Hidden)"}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              p.isActive ? "bg-emerald-500" : "bg-amber-500"
+                            }`}
+                          />
+                          {p.isActive ? "Published" : "Draft"}
                         </button>
                       </td>
 

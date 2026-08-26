@@ -4,10 +4,16 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ProductType } from "@/types/product";
-import { Sparkles, Flame, Clock, ArrowRight, Zap, Gift } from "lucide-react";
+import { Sparkles, Flame, Clock, ArrowRight, Zap, Gift, RefreshCw } from "lucide-react";
 
-export function ProductSection() {
-  const [activeTab, setActiveTab] = useState<"trending" | "bestsellers" | "eid" | "ready">("trending");
+interface ProductSectionProps {
+  initialProducts?: ProductType[];
+}
+
+export function ProductSection({ initialProducts = [] }: ProductSectionProps) {
+  const [activeTab, setActiveTab] = useState<"all" | "trending" | "bestsellers" | "festive">("all");
+  const [products, setProducts] = useState<ProductType[]>(initialProducts);
+  const [loading, setLoading] = useState(initialProducts.length === 0);
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -30,168 +36,77 @@ export function ProductSection() {
     return () => clearInterval(timer);
   }, []);
 
-  const catalogProducts: ProductType[] = [
-    {
-      id: "prod-1",
-      name: "Royal Emerald Hand-Embroidered Abaya",
-      slug: "royal-emerald-abaya",
-      sku: "BUY-ABY-001",
-      mrp: 6999,
-      price: 4999,
-      isNew: true,
-      isBestSeller: true,
-      isActive: true,
-      categoryId: "cat-1",
-      category: { id: "cat-1", name: "Luxury Abayas", slug: "abayas", isActive: true, order: 1 },
-      images: [
-        { id: "img-1", url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop", isPrimary: true, order: 1 },
-        { id: "img-2", url: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop", isPrimary: false, order: 2 },
-      ],
-      description: "Crafted from Grade-A Korean Nida with intricate metallic zardozi cuffs.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "prod-2",
-      name: "Medina Silk Heritage Hijab — Champagne Gold",
-      slug: "medina-silk-hijab-champagne",
-      sku: "BUY-HJB-002",
-      mrp: 1499,
-      price: 999,
-      isNew: true,
-      isBestSeller: false,
-      isActive: true,
-      categoryId: "cat-2",
-      category: { id: "cat-2", name: "Medina Silk Hijabs", slug: "hijabs", isActive: true, order: 2 },
-      images: [
-        { id: "img-3", url: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop", isPrimary: true, order: 1 },
-        { id: "img-4", url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop", isPrimary: false, order: 2 },
-      ],
-      description: "Non-slip, breathable luxury weave in radiant warm champagne.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "prod-3",
-      name: "Lahore Velvet Embroidered Anarkali Set",
-      slug: "lahore-velvet-anarkali",
-      sku: "BUY-ANK-003",
-      mrp: 8999,
-      price: 6499,
-      isNew: false,
-      isBestSeller: true,
-      isActive: true,
-      categoryId: "cat-3",
-      category: { id: "cat-3", name: "Pakistani Suits", slug: "pakistani-churidars", isActive: true, order: 3 },
-      images: [
-        { id: "img-5", url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop", isPrimary: true, order: 1 },
-        { id: "img-6", url: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=800&auto=format&fit=crop", isPrimary: false, order: 2 },
-      ],
-      description: "Intricate resham threadwork with heavy organza embroidered dupatta.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "prod-4",
-      name: "Obsidian Black Open-Front Kimono Abaya",
-      slug: "obsidian-kimono-abaya",
-      sku: "BUY-ABY-004",
-      mrp: 5999,
-      price: 3999,
-      isNew: false,
-      isBestSeller: true,
-      isActive: true,
-      categoryId: "cat-1",
-      category: { id: "cat-1", name: "Luxury Abayas", slug: "abayas", isActive: true, order: 1 },
-      images: [
-        { id: "img-7", url: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=800&auto=format&fit=crop", isPrimary: true, order: 1 },
-        { id: "img-8", url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop", isPrimary: false, order: 2 },
-      ],
-      description: "Flowing contemporary kimono cut with subtle gold button line.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "prod-5",
-      name: "Royal Zari Floor-Length Wedding Gown",
-      slug: "royal-zari-wedding-gown",
-      sku: "BUY-GWN-005",
-      mrp: 12999,
-      price: 9499,
-      isNew: true,
-      isBestSeller: false,
-      isActive: true,
-      categoryId: "cat-4",
-      category: { id: "cat-4", name: "Islamic Dresses", slug: "islamic-dresses", isActive: true, order: 4 },
-      images: [
-        { id: "img-9", url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop", isPrimary: true, order: 1 },
-        { id: "img-10", url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop", isPrimary: false, order: 2 },
-      ],
-      description: "Full-coverage royal silk gown with hand-sewn pearl work.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "prod-6",
-      name: "Luxury Chiffon Shayla (Box of 4 Essentials)",
-      slug: "chiffon-shayla-box-of-4",
-      sku: "BUY-HJB-006",
-      mrp: 3499,
-      price: 2499,
-      isNew: false,
-      isBestSeller: true,
-      isActive: true,
-      categoryId: "cat-2",
-      category: { id: "cat-2", name: "Medina Silk Hijabs", slug: "hijabs", isActive: true, order: 2 },
-      images: [
-        { id: "img-11", url: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop", isPrimary: true, order: 1 },
-        { id: "img-12", url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop", isPrimary: false, order: 2 },
-      ],
-      description: "Presented in our signature gold-embossed gift box with silk ribbon.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "prod-7",
-      name: "Pakistani Pure Lawn Printed Festive Suit",
-      slug: "pakistani-pure-lawn-suit",
-      sku: "BUY-PAK-007",
-      mrp: 4999,
-      price: 3499,
-      isNew: true,
-      isBestSeller: false,
-      isActive: true,
-      categoryId: "cat-3",
-      category: { id: "cat-3", name: "Pakistani Suits", slug: "pakistani-churidars", isActive: true, order: 3 },
-      images: [
-        { id: "img-13", url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop", isPrimary: true, order: 1 },
-        { id: "img-14", url: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=800&auto=format&fit=crop", isPrimary: false, order: 2 },
-      ],
-      description: "Lightweight summer lawn with embroidered schiffli neckline and lace trims.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "prod-8",
-      name: "Moroccan Embroidered Silk Kaftan Cape",
-      slug: "moroccan-silk-kaftan",
-      sku: "BUY-KFT-008",
-      mrp: 7999,
-      price: 5499,
-      isNew: false,
-      isBestSeller: true,
-      isActive: true,
-      categoryId: "cat-4",
-      category: { id: "cat-4", name: "Islamic Dresses", slug: "islamic-dresses", isActive: true, order: 4 },
-      images: [
-        { id: "img-15", url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop", isPrimary: true, order: 1 },
-        { id: "img-16", url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop", isPrimary: false, order: 2 },
-      ],
-      description: "Bespoke gold braid sfifa trims with regal floor-sweeping cape drapes.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
+  // Fetch live published products from backend API
+  useEffect(() => {
+    fetch("/api/admin/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data.products)) {
+          // Map to ProductType format and filter only active/published items
+          const activeProds: ProductType[] = data.products
+            .filter((p: any) => p.isActive !== false)
+            .map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              sku: p.sku,
+              price: p.price,
+              mrp: p.mrp || p.price * 1.3,
+              description: p.description || p.shortDesc || "",
+              shortDesc: p.shortDesc,
+              fabricCare: p.fabricCare,
+              categoryId: p.categoryId || "cat-1",
+              category: {
+                id: p.categoryId || "cat-1",
+                name: p.category || "Luxury Modest",
+                slug: p.categorySlug || "abayas",
+                isActive: true,
+                order: 1,
+              },
+              images: (p.images && p.images.length > 0)
+                ? p.images.map((url: string, idx: number) => ({
+                    id: `img-${idx}`,
+                    url,
+                    isPrimary: idx === 0,
+                    order: idx,
+                  }))
+                : [
+                    {
+                      id: "img-def",
+                      url: p.image || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
+                      isPrimary: true,
+                      order: 1,
+                    },
+                  ],
+              variants: p.variants || [],
+              isActive: p.isActive !== false,
+              isFeatured: Boolean(p.isFeatured),
+              isNew: Boolean(p.isNew),
+              isBestSeller: Boolean(p.isBestSeller),
+              tags: p.tags || [],
+              createdAt: p.createdAt || new Date().toISOString(),
+              updatedAt: p.updatedAt || new Date().toISOString(),
+            }));
+
+          setProducts(activeProds);
+        }
+      })
+      .catch((err) => console.warn("Live products fetch notice:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Filter products by active tab
+  const filteredProducts = products.filter((prod) => {
+    if (activeTab === "trending") return prod.isFeatured || prod.isNew;
+    if (activeTab === "bestsellers") return prod.isBestSeller;
+    if (activeTab === "festive") {
+      return (
+        prod.tags?.some((t) => /festive|wedding|pakistani|silk|eid/i.test(t)) ||
+        /suit|anarkali|gown|zari/i.test(prod.name)
+      );
+    }
+    return true; // "all" tab
+  });
 
   return (
     <div className="space-y-16 sm:space-y-20 py-12 sm:py-16">
@@ -216,7 +131,11 @@ export function ProductSection() {
               Complimentary 25% Off on Selected Silhouettes
             </h3>
             <p className="text-xs text-cream-200/80 font-light max-w-lg">
-              Enter code <strong className="text-white bg-terracotta px-2.5 py-0.5 rounded-full font-mono font-bold">ARAMYA25</strong> at checkout. Includes custom sleeve & length tailoring.
+              Enter code{" "}
+              <strong className="text-white bg-terracotta px-2.5 py-0.5 rounded-full font-mono font-bold">
+                ARAMYA25
+              </strong>{" "}
+              at checkout. Includes custom sleeve & length tailoring.
             </p>
           </div>
 
@@ -262,10 +181,10 @@ export function ProductSection() {
         {/* Aramya Minimalist Tab Switcher */}
         <div className="flex items-center justify-center gap-2 border-b border-aramyaBorder pb-4 mb-10 overflow-x-auto">
           {[
-            { id: "trending", label: "Trending Now", icon: Sparkles },
+            { id: "all", label: "All New Arrivals", icon: Sparkles },
+            { id: "trending", label: "Featured Atelier", icon: Zap },
             { id: "bestsellers", label: "Bestsellers", icon: Flame },
-            { id: "eid", label: "Festive Edit", icon: Zap },
-            { id: "ready", label: "Ready to Ship", icon: Clock },
+            { id: "festive", label: "Festive & Wedding", icon: Clock },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -286,18 +205,41 @@ export function ProductSection() {
           })}
         </div>
 
-        {/* Product Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {catalogProducts.map((prod) => (
-            <ProductCard key={prod.id} product={prod} />
-          ))}
-        </div>
+        {/* Loading State */}
+        {loading ? (
+          <div className="py-16 text-center text-charcoal/50 flex flex-col items-center justify-center gap-3">
+            <RefreshCw className="w-6 h-6 animate-spin text-terracotta" />
+            <span className="text-xs uppercase tracking-widest font-bold">
+              Loading New Arrivals...
+            </span>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="py-12 text-center text-charcoal/50 bg-white border border-aramyaBorder rounded-3xl p-8 max-w-md mx-auto">
+            <p className="font-semibold text-charcoal text-sm">No silhouettes found in this edit</p>
+            <p className="text-xs text-charcoal/50 mt-1 mb-4">
+              Explore our full collection in the shop.
+            </p>
+            <button
+              onClick={() => setActiveTab("all")}
+              className="px-4 py-2 bg-cream-100 text-charcoal text-xs font-semibold rounded-full hover:bg-terracotta hover:text-white transition-all"
+            >
+              View All Silhouettes
+            </button>
+          </div>
+        ) : (
+          /* Product Cards Grid */
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {filteredProducts.map((prod) => (
+              <ProductCard key={prod.id} product={prod} />
+            ))}
+          </div>
+        )}
 
         {/* View All CTA */}
         <div className="text-center pt-14">
           <Link href="/shop">
             <button className="btn-aramya-terracotta group">
-              <span>EXPLORE ALL 240+ SILHOUETTES</span>
+              <span>EXPLORE ALL SILHOUETTES</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
             </button>
           </Link>

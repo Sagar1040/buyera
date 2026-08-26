@@ -6,7 +6,8 @@ import { BrandStory } from "@/components/home/BrandStory";
 import { LookbookGrid } from "@/components/home/LookbookGrid";
 import { Newsletter } from "@/components/home/Newsletter";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default function HomePage() {
   return (

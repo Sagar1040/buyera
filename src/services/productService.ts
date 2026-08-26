@@ -149,19 +149,34 @@ export class ProductService {
     const [featured, newArrivals, bestSellers, categories, banners] =
       await Promise.all([
         prisma.product.findMany({
-          where: { isFeatured: true, isActive: true },
+          where: { isActive: true },
+          orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
           take: 8,
-          include: { images: true, category: true, variants: true },
+          include: {
+            images: { orderBy: { order: "asc" } },
+            category: true,
+            variants: true,
+          },
         }),
         prisma.product.findMany({
-          where: { isNew: true, isActive: true },
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
           take: 8,
-          include: { images: true, category: true, variants: true },
+          include: {
+            images: { orderBy: { order: "asc" } },
+            category: true,
+            variants: true,
+          },
         }),
         prisma.product.findMany({
-          where: { isBestSeller: true, isActive: true },
+          where: { isActive: true },
+          orderBy: [{ isBestSeller: "desc" }, { createdAt: "desc" }],
           take: 8,
-          include: { images: true, category: true, variants: true },
+          include: {
+            images: { orderBy: { order: "asc" } },
+            category: true,
+            variants: true,
+          },
         }),
         prisma.category.findMany({
           where: { isActive: true },
