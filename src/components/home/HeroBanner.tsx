@@ -12,6 +12,7 @@ import {
   Scissors,
   Star,
   Award,
+  PlusCircle,
 } from "lucide-react";
 
 interface HeroSlide {
@@ -23,275 +24,252 @@ interface HeroSlide {
   ctaPrimary: { text: string; href: string };
   ctaSecondary?: { text: string; href: string };
   image: string;
-  highlightReview?: { author: string; text: string };
 }
 
-const DEFAULT_SLIDES: HeroSlide[] = [
-  {
-    id: "default-1",
-    tag: "✦ Handcrafted Everyday Elegance",
-    badge: "FESTIVE COUTURE 2026",
-    title: "Timeless Modesty. Artisanal Luxury.",
-    subtitle:
-      "Handcrafted Korean Nida abayas, intricate zardozi metallic threadwork, and bespoke velvet silhouettes created for the modern woman.",
-    ctaPrimary: { text: "Shop New Arrivals", href: "/shop?sort=newest" },
-    ctaSecondary: { text: "Explore Collection", href: "/category/abayas" },
-    image:
-      "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200&auto=format&fit=crop",
-    highlightReview: {
-      author: "Farah M., Dubai",
-      text: "The drape and zardozi detailing exceeded all expectations.",
-    },
-  },
-  {
-    id: "default-2",
-    tag: "✦ Handcrafted Everyday Elegance",
-    badge: "PAKISTANI DESIGNER EDIT",
-    title: "Poetic Silhouettes & Resham Embroidery",
-    subtitle:
-      "Authentic festive Pakistani ensembles, pure lawn drapes, and handcrafted organza dupattas tailored to your precise measurements.",
-    ctaPrimary: { text: "Shop New Arrivals", href: "/shop?sort=newest" },
-    ctaSecondary: { text: "Explore Collection", href: "/category/pakistani-churidars" },
-    image:
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1200&auto=format&fit=crop",
-    highlightReview: {
-      author: "Sana R., London",
-      text: "Flawless made-to-measure stitching and fast delivery.",
-    },
-  },
-  {
-    id: "default-3",
-    tag: "✦ Handcrafted Everyday Elegance",
-    badge: "SIGNATURE WEAVE",
-    title: "Featherlight Silk & Chiffon Drapes",
-    subtitle:
-      "Signature non-slip, breathable Medina Silk shaylas in curated warm sand, desert rose, and regal gemstone palettes.",
-    ctaPrimary: { text: "Shop New Arrivals", href: "/shop?sort=newest" },
-    ctaSecondary: { text: "Explore Collection", href: "/category/hijabs" },
-    image:
-      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1200&auto=format&fit=crop",
-    highlightReview: {
-      author: "Zainab K., Bengaluru",
-      text: "The softest Medina silk weave I have ever worn.",
-    },
-  },
-];
+interface HeroBannerProps {
+  banners?: any[];
+}
 
-export function HeroBanner() {
-  const [slides, setSlides] = useState<HeroSlide[]>(DEFAULT_SLIDES);
+export function HeroBanner({ banners = [] }: HeroBannerProps) {
+  const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Map incoming banners to HeroSlide format
   useEffect(() => {
-    const fetchLiveBanners = async () => {
-      try {
-        const res = await fetch("/api/admin/banners");
-        const data = await res.json();
-        if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
-          const activeBanners = data.banners.filter((b: any) => b.isActive !== false);
-
-          if (activeBanners.length > 0) {
-            const mappedSlides: HeroSlide[] = activeBanners.map((b: any, idx: number) => ({
-              id: b.id || `banner-${idx}`,
-              tag: "✦ Handcrafted Everyday Elegance",
-              badge: b.badge || "HAUTE COUTURE",
-              title: b.title,
-              subtitle:
-                b.subtitle ||
-                "Exquisite handcrafted silhouettes tailored with artisanal mastery.",
-              ctaPrimary: {
-                text: "Shop New Arrivals",
-                href: "/shop?sort=newest",
-              },
-              ctaSecondary: {
-                text: "Explore Collection",
-                href: b.ctaUrl || b.ctaLink || "/shop",
-              },
-              image: b.imageUrl,
-              highlightReview: DEFAULT_SLIDES[idx % DEFAULT_SLIDES.length].highlightReview,
-            }));
-            setSlides(mappedSlides);
+    if (banners && banners.length > 0) {
+      const activeBanners = banners.filter((b: any) => b.isActive !== false);
+      const mapped: HeroSlide[] = activeBanners.map((b: any, idx: number) => ({
+        id: b.id || `banner-${idx}`,
+        tag: "✦ Handcrafted Everyday Elegance",
+        badge: b.badge || "HAUTE COUTURE",
+        title: b.title,
+        subtitle:
+          b.subtitle ||
+          "Explore certified pure fabrics, contemporary drapes, and artisanal tailoring.",
+        ctaPrimary: {
+          text: b.ctaText || "Shop Collection",
+          href: b.ctaUrl || "/shop",
+        },
+        ctaSecondary: {
+          text: "Explore All Silhouettes",
+          href: "/shop",
+        },
+        image: b.imageUrl,
+      }));
+      setSlides(mapped);
+    } else {
+      // Fetch live banners if not passed from server
+      fetch("/api/admin/banners")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.success && Array.isArray(data.banners) && data.banners.length > 0) {
+            const mapped: HeroSlide[] = data.banners
+              .filter((b: any) => b.isActive !== false)
+              .map((b: any, idx: number) => ({
+                id: b.id || `banner-${idx}`,
+                tag: "✦ Handcrafted Everyday Elegance",
+                badge: b.badge || "HAUTE COUTURE",
+                title: b.title,
+                subtitle:
+                  b.subtitle ||
+                  "Explore certified pure fabrics, contemporary drapes, and artisanal tailoring.",
+                ctaPrimary: {
+                  text: b.ctaText || "Shop Collection",
+                  href: b.ctaUrl || "/shop",
+                },
+                ctaSecondary: {
+                  text: "Explore All Silhouettes",
+                  href: "/shop",
+                },
+                image: b.imageUrl,
+              }));
+            setSlides(mapped);
+          } else {
+            setSlides([]);
           }
-        }
-      } catch (err) {
-        console.warn("Using luxury default slides:", err);
-      }
-    };
+        })
+        .catch(() => setSlides([]));
+    }
+  }, [banners]);
 
-    fetchLiveBanners();
-  }, []);
-
+  // Auto-advance carousel
   useEffect(() => {
-    if (isPaused || slides.length <= 1) return;
+    if (slides.length <= 1 || isPaused) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 7000);
+    }, 6500);
     return () => clearInterval(timer);
-  }, [isPaused, slides.length]);
+  }, [slides.length, isPaused]);
 
-  const handlePrev = () => {
-    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-  };
+  // 1. Empty State (No Banners yet in Database)
+  if (slides.length === 0) {
+    return (
+      <section className="relative bg-cream-100/60 border-b border-aramyaBorder py-20 sm:py-28 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center max-w-2xl space-y-6">
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white text-[11px] tracking-[0.25em] uppercase text-terracotta font-brand-badge font-bold rounded-full border border-aramyaBorder shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-terracotta" />
+            BUYERA ATELIER 2026
+          </span>
 
-  const handleNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  };
+          <h1 className="font-editorial-heading text-3xl sm:text-5xl lg:text-6xl text-charcoal font-normal leading-tight">
+            Timeless Modesty. <br />
+            <span className="italic font-serif text-terracotta">Artisanal Luxury.</span>
+          </h1>
 
-  const activeSlide = slides[currentSlide % (slides.length || 1)] || DEFAULT_SLIDES[0];
+          <p className="text-sm sm:text-base text-charcoal/70 font-light max-w-lg mx-auto leading-relaxed">
+            Welcome to BUYERA. Discover bespoke abayas, breathable Medina silk shaylas, and festive designer ensembles.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link href="/shop">
+              <button className="btn-aramya-terracotta group">
+                <span>EXPLORE THE SHOP</span>
+                <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </button>
+            </Link>
+
+            <Link href="/admin/banners">
+              <button className="btn-aramya-outline flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-terracotta" />
+                <span>ADD HERO BANNER (ADMIN)</span>
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // 2. Active Carousel with Dynamic Banners
+  const slide = slides[currentSlide] || slides[0];
 
   return (
     <section
-      className="relative w-full overflow-hidden bg-cream bg-aramya-pattern py-10 sm:py-16 lg:py-20 border-b border-aramyaBorder select-none"
+      className="relative bg-cream min-h-[540px] sm:min-h-[620px] lg:min-h-[700px] flex items-center border-b border-aramyaBorder overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Soft Ambient Glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-terracotta-50 via-cream-100 to-transparent rounded-full blur-3xl pointer-events-none -translate-y-1/3 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-gradient-to-tr from-olive-50 via-cream-100 to-transparent rounded-full blur-3xl pointer-events-none translate-y-1/4 -translate-x-1/4" />
+      {/* Background Soft Glow */}
+      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-terracotta/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-olive/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-          {/* Left Column: Editorial Content */}
-          <div className="lg:col-span-7 space-y-6 text-charcoal">
-            {/* Tagline Badge */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white text-terracotta text-[10px] uppercase font-bold tracking-[0.2em] rounded-full border border-aramyaBorder shadow-xs">
-                {activeSlide.tag}
-              </span>
-              <span className="px-3 py-1 bg-olive-50 text-olive-600 text-[10px] font-semibold uppercase tracking-widest rounded-full border border-olive-100">
-                {activeSlide.badge}
-              </span>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
+          {/* Left Column: Editorial Copy */}
+          <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-white text-[10px] sm:text-xs tracking-[0.2em] uppercase text-terracotta font-brand-badge font-bold rounded-full border border-aramyaBorder shadow-xs">
+                <Sparkles className="w-3 h-3 text-terracotta" />
+                <span>{slide.badge}</span>
+              </div>
+
+              <h1 className="font-editorial-heading text-3xl sm:text-5xl lg:text-6xl text-charcoal font-normal leading-[1.15] tracking-tight">
+                {slide.title}
+              </h1>
             </div>
 
-            {/* Editorial Title */}
-            <h1 className="font-editorial-heading text-3xl sm:text-5xl lg:text-6xl text-charcoal font-normal leading-[1.12] tracking-tight">
-              {activeSlide.title}
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-xs sm:text-sm text-charcoal/70 font-light leading-relaxed max-w-xl">
-              {activeSlide.subtitle}
+            <p className="text-xs sm:text-sm lg:text-base text-charcoal/70 font-light max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              {slide.subtitle}
             </p>
 
-            {/* Dual CTAs: Solid Terracotta & Warm Outline */}
-            <div className="flex flex-wrap items-center gap-3.5 pt-2">
-              <Link href={activeSlide.ctaPrimary.href}>
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2">
+              <Link href={slide.ctaPrimary.href}>
                 <button className="btn-aramya-terracotta group">
-                  <span>{activeSlide.ctaPrimary.text}</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                  <span>{slide.ctaPrimary.text}</span>
+                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </button>
               </Link>
-              {activeSlide.ctaSecondary && (
-                <Link href={activeSlide.ctaSecondary.href}>
+
+              {slide.ctaSecondary && (
+                <Link href={slide.ctaSecondary.href}>
                   <button className="btn-aramya-outline">
-                    {activeSlide.ctaSecondary.text}
+                    <span>{slide.ctaSecondary.text}</span>
                   </button>
                 </Link>
               )}
             </div>
 
-            {/* Trust Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6 border-t border-aramyaBorder text-[11px] text-charcoal/70">
+            {/* Trust Badges */}
+            <div className="pt-6 sm:pt-8 border-t border-aramyaBorder grid grid-cols-3 gap-3 max-w-lg mx-auto lg:mx-0 text-left">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-aramyaBorder text-terracotta shadow-xs">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <span>100% Pure Fabrics</span>
+                <ShieldCheck className="w-4 h-4 text-terracotta shrink-0" />
+                <span className="text-[10px] sm:text-xs text-charcoal/80 font-medium">
+                  100% Pure Fabrics
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-aramyaBorder text-terracotta shadow-xs">
-                  <Scissors className="w-4 h-4" />
-                </div>
-                <span>Custom Made-to-Measure</span>
+                <Scissors className="w-4 h-4 text-olive shrink-0" />
+                <span className="text-[10px] sm:text-xs text-charcoal/80 font-medium">
+                  Custom Tailoring
+                </span>
               </div>
-              <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
-                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-aramyaBorder text-terracotta shadow-xs">
-                  <Award className="w-4 h-4" />
-                </div>
-                <span>50,000+ Dressed</span>
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-terracotta shrink-0" />
+                <span className="text-[10px] sm:text-xs text-charcoal/80 font-medium">
+                  Artisanal Finish
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Editorial Arched Frame Lookbook Image */}
-          <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-sm lg:max-w-none">
-              {/* Arched Photo Frame (rounded-t-full / rounded-3xl) */}
-              <div className="relative aspect-[3/4] w-full rounded-t-full rounded-b-3xl overflow-hidden bg-cream-200 border-2 border-aramyaBorder shadow-luxury-lg">
-                <img
-                  key={activeSlide.id}
-                  src={activeSlide.image}
-                  alt={activeSlide.title}
-                  className="w-full h-full object-cover object-top transition-all duration-1000 ease-out hover:scale-105"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = "none";
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent" />
-              </div>
-
-              {/* Floating Top Badge */}
-              <div className="absolute top-6 -left-3 sm:-left-6 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-aramyaBorder shadow-soft flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-charcoal font-semibold animate-float">
-                <span className="w-2 h-2 rounded-full bg-terracotta animate-pulse" />
-                <span>Spring / Eid Edit</span>
-              </div>
-
-              {/* Floating Review Card */}
-              {activeSlide.highlightReview && (
-                <div className="absolute -bottom-4 -right-3 sm:-right-6 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-aramyaBorder shadow-luxury max-w-[220px] sm:max-w-[240px] space-y-1 animate-fadeIn">
-                  <div className="flex items-center gap-1 text-gold">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-charcoal/80 font-light italic leading-snug">
-                    "{activeSlide.highlightReview.text}"
-                  </p>
-                  <p className="text-[9px] uppercase tracking-wider text-terracotta font-bold">
-                    — {activeSlide.highlightReview.author}
-                  </p>
-                </div>
-              )}
+          {/* Right Column: Editorial Visual */}
+          <div className="lg:col-span-5 relative flex justify-center">
+            <div className="relative w-full max-w-[380px] sm:max-w-[420px] aspect-3/4 rounded-3xl overflow-hidden bg-white border-2 border-aramyaBorder shadow-luxury-lg group">
+              <Image
+                src={slide.image}
+                alt={slide.title}
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 420px"
+                className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/30 via-transparent to-transparent" />
             </div>
-
-            {/* Slider Navigation Controls */}
-            {slides.length > 1 && (
-              <div className="flex items-center justify-between mt-8 pt-2">
-                <div className="flex items-center gap-2">
-                  {slides.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentSlide(idx)}
-                      aria-label={`Go to slide ${idx + 1}`}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        currentSlide === idx
-                          ? "w-8 bg-terracotta"
-                          : "w-2 bg-aramyaBorder hover:bg-charcoal/40"
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handlePrev}
-                    aria-label="Previous Slide"
-                    className="w-8 h-8 rounded-full bg-white border border-aramyaBorder text-charcoal hover:bg-terracotta hover:text-white flex items-center justify-center transition-all shadow-xs"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={handleNext}
-                    aria-label="Next Slide"
-                    className="w-8 h-8 rounded-full bg-white border border-aramyaBorder text-charcoal hover:bg-terracotta hover:text-white flex items-center justify-center transition-all shadow-xs"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Carousel Navigation Controls */}
+        {slides.length > 1 && (
+          <div className="flex items-center justify-between mt-8 pt-4 border-t border-aramyaBorder/60">
+            <div className="flex items-center gap-2">
+              {slides.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`h-1.5 transition-all duration-300 rounded-full ${
+                    idx === currentSlide
+                      ? "w-8 bg-terracotta"
+                      : "w-2 bg-charcoal/20 hover:bg-charcoal/40"
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() =>
+                  setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1))
+                }
+                className="p-2 bg-white border border-aramyaBorder rounded-full hover:bg-terracotta hover:text-white transition-colors"
+                aria-label="Previous slide"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentSlide((prev) => (prev + 1) % slides.length)
+                }
+                className="p-2 bg-white border border-aramyaBorder rounded-full hover:bg-terracotta hover:text-white transition-colors"
+                aria-label="Next slide"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

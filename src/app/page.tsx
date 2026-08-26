@@ -12,21 +12,36 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function HomePage() {
+  let banners: any[] = [];
+  let categories: any[] = [];
   let latestProducts: ProductType[] = [];
 
   try {
-    const raw = await prisma.product.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: "desc" },
-      take: 12,
-      include: {
-        category: true,
-        images: { orderBy: { order: "asc" } },
-        variants: true,
-      },
-    });
+    const [rawBanners, rawCategories, rawProducts] = await Promise.all([
+      prisma.banner.findMany({
+        where: { isActive: true },
+        orderBy: { order: "asc" },
+      }),
+      prisma.category.findMany({
+        where: { isActive: true },
+        orderBy: { order: "asc" },
+      }),
+      prisma.product.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: "desc" },
+        take: 12,
+        include: {
+          category: true,
+          images: { orderBy: { order: "asc" } },
+          variants: true,
+        },
+      }),
+    ]);
 
-    latestProducts = raw.map((p) => ({
+    banners = rawBanners;
+    categories = rawCategories;
+
+    latestProducts = rawProducts.map((p) => ({
       id: p.id,
       name: p.name,
       slug: p.slug,
@@ -75,8 +90,8 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col w-full bg-cream">
-      <HeroBanner />
-      <CategoryGrid />
+      <HeroBanner banners={banners} />
+      <CategoryGrid categories={categories} />
       <ProductSection initialProducts={latestProducts} />
       <BrandStory />
       <LookbookGrid />

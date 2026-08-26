@@ -3,102 +3,89 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Sparkles } from "lucide-react";
+import { Sparkles, PlusCircle } from "lucide-react";
 
 interface CategoryStory {
   id: string;
   name: string;
-  count: string;
-  tag: string;
+  count?: string;
+  tag?: string;
   image: string;
   href: string;
 }
 
-const DEFAULT_CATEGORIES: CategoryStory[] = [
-  {
-    id: "cat-1",
-    name: "Abayas",
-    count: "48+ Styles",
-    tag: "DUBAI EDIT",
-    image:
-      "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
-    href: "/shop?category=abayas",
-  },
-  {
-    id: "cat-2",
-    name: "Hijabs",
-    count: "36+ Shades",
-    tag: "MEDINA SILK",
-    image:
-      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop",
-    href: "/shop?category=hijabs",
-  },
-  {
-    id: "cat-3",
-    name: "Kurtas & Suits",
-    count: "52+ Ensembles",
-    tag: "PURE LAWN",
-    image:
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop",
-    href: "/shop?category=pakistani-churidars",
-  },
-  {
-    id: "cat-4",
-    name: "Kaftans",
-    count: "18+ Styles",
-    tag: "EMBELLISHED",
-    image:
-      "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop",
-    href: "/shop?category=royal-kaftans",
-  },
-  {
-    id: "cat-5",
-    name: "Co-ords & Dresses",
-    count: "24+ Styles",
-    tag: "MODERN FIT",
-    image:
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
-    href: "/shop?category=islamic-dresses",
-  },
-  {
-    id: "cat-6",
-    name: "Anarkalis",
-    count: "28+ Styles",
-    tag: "HAUTE COUTURE",
-    image:
-      "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=800&auto=format&fit=crop",
-    href: "/shop?category=islamic-dresses",
-  },
-];
+interface CategoryGridProps {
+  categories?: any[];
+}
 
-export function CategoryGrid() {
-  const [catList, setCatList] = useState<CategoryStory[]>(DEFAULT_CATEGORIES);
+export function CategoryGrid({ categories = [] }: CategoryGridProps) {
+  const [catList, setCatList] = useState<CategoryStory[]>([]);
 
   useEffect(() => {
-    fetch("/api/admin/categories")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.success && Array.isArray(data.categories) && data.categories.length > 0) {
-          const mapped = data.categories
-            .filter((c: any) => c.isActive !== false)
-            .map((c: any) => ({
-              id: c.id,
-              name: c.name,
-              count: "Curated Edit",
-              tag: "EXCLUSIVE",
-              image:
-                c.imageUrl ||
-                "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
-              href: `/shop?category=${c.slug}`,
-            }));
-
-          if (mapped.length > 0) {
+    if (categories && categories.length > 0) {
+      const active = categories.filter((c: any) => c.isActive !== false);
+      const mapped: CategoryStory[] = active.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        count: "Curated Edit",
+        tag: "ATELIER",
+        image:
+          c.imageUrl ||
+          "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
+        href: `/shop?category=${c.slug}`,
+      }));
+      setCatList(mapped);
+    } else {
+      // Fetch live categories if not passed from server
+      fetch("/api/admin/categories")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.success && Array.isArray(data.categories) && data.categories.length > 0) {
+            const mapped: CategoryStory[] = data.categories
+              .filter((c: any) => c.isActive !== false)
+              .map((c: any) => ({
+                id: c.id,
+                name: c.name,
+                count: "Curated Edit",
+                tag: "ATELIER",
+                image:
+                  c.imageUrl ||
+                  "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
+                href: `/shop?category=${c.slug}`,
+              }));
             setCatList(mapped);
+          } else {
+            setCatList([]);
           }
-        }
-      })
-      .catch((err) => console.warn("Live categories fetch notice:", err));
-  }, []);
+        })
+        .catch(() => setCatList([]));
+    }
+  }, [categories]);
+
+  // Empty state if no categories exist in database
+  if (catList.length === 0) {
+    return (
+      <section className="py-12 bg-cream/70 border-b border-aramyaBorder">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="bg-white border border-aramyaBorder rounded-3xl p-8 max-w-md mx-auto space-y-3 shadow-card">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-cream-100 text-[10px] tracking-widest uppercase text-terracotta font-bold rounded-full">
+              <Sparkles className="w-3 h-3 text-terracotta" />
+              BOUTIQUE CATEGORIES
+            </span>
+            <p className="text-xs text-charcoal/60">
+              No categories have been added yet.
+            </p>
+            <Link href="/admin/categories">
+              <button className="px-4 py-2 bg-terracotta text-white text-xs font-bold uppercase tracking-wider rounded-full hover:bg-terracotta-dark transition-all flex items-center gap-1.5 mx-auto">
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Add Categories (Admin)</span>
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 sm:py-20 bg-cream/70 border-b border-aramyaBorder relative overflow-hidden">
@@ -142,14 +129,11 @@ export function CategoryGrid() {
               {/* High Contrast Typography Below */}
               <div className="mt-3.5 space-y-0.5">
                 <span className="text-[9px] uppercase tracking-widest text-terracotta font-bold block">
-                  {cat.tag}
+                  {cat.tag || "ATELIER"}
                 </span>
                 <h3 className="text-xs sm:text-sm font-bold text-charcoal group-hover:text-terracotta transition-colors">
                   {cat.name}
                 </h3>
-                <p className="text-[10px] text-charcoal/50 font-light">
-                  {cat.count}
-                </p>
               </div>
             </Link>
           ))}
