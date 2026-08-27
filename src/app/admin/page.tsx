@@ -22,6 +22,8 @@ import {
   Calendar,
   Layers,
   ArrowRight,
+  Sparkles,
+  Settings,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -175,6 +177,17 @@ export default function AdminDashboardPage() {
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+
+          <Link href="/admin/settings?tab=story">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs uppercase tracking-wider border-gold/40 text-gold-dark hover:bg-gold/10"
+            >
+              <Sparkles className="w-3.5 h-3.5 mr-1.5 text-gold-dark" />
+              Brand Story
+            </Button>
+          </Link>
 
           <Link href="/admin/products/new">
             <Button variant="primary" size="sm" className="text-xs uppercase tracking-wider">

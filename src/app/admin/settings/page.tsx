@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Settings,
   Truck,
@@ -33,9 +34,25 @@ import { useSettings } from "@/context/SettingsContext";
 
 type TabKey = "general" | "announcement" | "story" | "shipping" | "contact" | "footer";
 
-export default function AdminSettingsPage() {
+function AdminSettingsContent() {
   const { refreshSettings } = useSettings();
-  const [activeTab, setActiveTab] = useState<TabKey>("general");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  const initialTab = (searchParams.get("tab") as TabKey) || "general";
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    ["general", "announcement", "story", "shipping", "contact", "footer"].includes(initialTab)
+      ? initialTab
+      : "general"
+  );
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as TabKey;
+    if (tabParam && ["general", "announcement", "story", "shipping", "contact", "footer"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -167,6 +184,12 @@ export default function AdminSettingsPage() {
       label: "Topbar & Tickers",
       icon: Megaphone,
       desc: "Announcement bar & promotions",
+    },
+    {
+      id: "story",
+      label: "Brand Story & About",
+      icon: Sparkles,
+      desc: "Philosophy narrative, metrics & atelier photo",
     },
     {
       id: "shipping",
@@ -821,3 +844,19 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+
+export default function AdminSettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="py-20 text-center text-charcoal/50">
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-terracotta" />
+          <p className="text-xs uppercase tracking-widest font-semibold">Loading CMS Configuration...</p>
+        </div>
+      }
+    >
+      <AdminSettingsContent />
+    </Suspense>
+  );
+}
+

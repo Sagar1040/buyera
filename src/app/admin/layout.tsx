@@ -29,6 +29,7 @@ import {
   Truck,
   ChevronDown,
   Layers,
+  Sparkles,
 } from "lucide-react";
 
 interface NavGroup {
@@ -74,6 +75,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Discount Coupons", href: "/admin/coupons", icon: TicketPercent },
       { label: "Hero Sliders & Banners", href: "/admin/banners", icon: ImageIcon },
+      { label: "Brand Story & Philosophy", href: "/admin/settings?tab=story", icon: Sparkles },
     ],
   },
   {
@@ -222,10 +224,11 @@ export default function AdminLayout({
               </span>
               {group.items.map((item) => {
                 const Icon = item.icon;
+                const baseHref = item.href.split("?")[0];
                 const isActive =
                   item.href === "/admin"
                     ? pathname === "/admin"
-                    : pathname.startsWith(item.href);
+                    : pathname === baseHref || pathname.startsWith(baseHref + "/");
 
                 return (
                   <Link
@@ -358,7 +361,15 @@ export default function AdminLayout({
                     className="flex items-center gap-2 px-3.5 py-2 text-charcoal hover:bg-cream-50 hover:text-gold transition-colors font-medium"
                   >
                     <ImageIcon className="w-3.5 h-3.5 text-gold-dark" />
-                    New Hero Slider
+                    New Banner
+                  </Link>
+                  <Link
+                    href="/admin/settings?tab=story"
+                    onClick={() => setCreateMenuOpen(false)}
+                    className="flex items-center gap-2 px-3.5 py-2 text-charcoal hover:bg-cream-50 hover:text-gold transition-colors font-medium"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-gold-dark" />
+                    Brand Story & Philosophy
                   </Link>
                   <Link
                     href="/admin/categories"
