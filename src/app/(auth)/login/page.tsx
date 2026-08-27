@@ -6,14 +6,14 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const registered = searchParams.get("registered");
-  const callbackUrl = searchParams.get("callbackUrl") || "/account";
+  const registered = searchParams?.get("registered");
+  const callbackUrl = searchParams?.get("callbackUrl") || "/account";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,19 +28,28 @@ function LoginForm() {
     try {
       const res = await signIn("credentials", {
         redirect: false,
-        email,
+        email: email.trim().toLowerCase(),
         password,
         callbackUrl,
       });
 
-      if (res?.error) {
-        setError("Invalid email or password. Please try again.");
+      if (!res) {
+        setError("Unable to reach authentication server. Please try again.");
+        return;
+      }
+
+      if (res.error) {
+        setError(
+          res.error === "CredentialsSignin" || res.status === 401
+            ? "Invalid email or password. Please verify your login details."
+            : res.error
+        );
       } else {
-        router.push(callbackUrl);
+        router.push(res.url || callbackUrl);
         router.refresh();
       }
-    } catch (err) {
-      setError("An unexpected authentication error occurred.");
+    } catch (err: any) {
+      setError(err?.message || "An unexpected error occurred during sign in.");
     } finally {
       setLoading(false);
     }
@@ -71,8 +80,9 @@ function LoginForm() {
       )}
 
       {error && (
-        <div className="p-3 mb-6 bg-rose-50 border border-rose-200 text-rose-600 text-xs">
-          {error}
+        <div className="p-3 mb-6 bg-rose-50 border border-rose-200 text-rose-600 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -138,6 +148,7 @@ export default function LoginPage() {
       <Suspense
         fallback={
           <div className="w-full max-w-md bg-white border border-canvas-border p-10 text-center text-xs text-charcoal/50">
+            <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             Loading authentication...
           </div>
         }
@@ -147,3 +158,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
