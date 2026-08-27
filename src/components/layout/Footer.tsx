@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Instagram,
   Facebook,
@@ -18,7 +19,12 @@ import { Logo } from "@/components/ui/Logo";
 import { useSettings } from "@/context/SettingsContext";
 
 export function Footer() {
+  const pathname = usePathname();
   const { settings } = useSettings();
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const cleanWhatsapp = (settings.whatsappNumber || "+919876543210").replace(/[^0-9]/g, "");
 

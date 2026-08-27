@@ -2,15 +2,17 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Sparkles, ShieldCheck, Truck, ChevronDown, MessageSquare } from "lucide-react";
 import { useSettings } from "@/context/SettingsContext";
 
 export function AnnouncementBar() {
+  const pathname = usePathname();
   const { settings } = useSettings();
   const [currency, setCurrency] = useState("INR (₹)");
   const [currencyOpen, setCurrencyOpen] = useState(false);
 
-  if (!settings.announcementActive) {
+  if (pathname?.startsWith("/admin") || !settings.announcementActive) {
     return null;
   }
 

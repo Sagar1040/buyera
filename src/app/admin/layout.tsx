@@ -159,7 +159,7 @@ export default function AdminLayout({
 
   // 3. Authenticated Admin View
   return (
-    <div className="min-h-screen bg-[#F7F5F0] flex flex-col lg:flex-row text-charcoal font-sans">
+    <div className="min-h-screen lg:h-screen lg:max-h-screen bg-[#F7F5F0] flex flex-col lg:flex-row text-charcoal font-sans overflow-hidden">
       {/* Mobile Topbar */}
       <div className="lg:hidden bg-[#121212] text-white px-4 py-3 flex items-center justify-between border-b border-white/10 sticky top-0 z-50">
         <div className="flex items-center gap-3">

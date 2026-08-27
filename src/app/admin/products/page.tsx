@@ -473,8 +473,8 @@ export default function AdminProductsPage() {
 
       {/* Delete Confirmation Modal */}
       {deletingProduct && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white max-w-md w-full p-6 shadow-2xl space-y-4 border border-canvas-border">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white max-w-md w-full p-6 shadow-2xl space-y-4 border border-canvas-border max-h-[90vh] overflow-y-auto my-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-canvas-border pb-3">
               <div className="flex items-center gap-2 text-rose-600 font-semibold">
                 <AlertTriangle className="w-5 h-5" />
@@ -533,8 +533,8 @@ export default function AdminProductsPage() {
 
       {/* Variant Quick Stock Modal */}
       {stockEditingProduct && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white max-w-lg w-full p-6 shadow-2xl space-y-4 border border-canvas-border">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white max-w-lg w-full p-6 shadow-2xl space-y-4 border border-canvas-border max-h-[90vh] overflow-y-auto my-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-canvas-border pb-3">
               <div>
                 <span className="text-[10px] text-gold uppercase font-bold tracking-wider">

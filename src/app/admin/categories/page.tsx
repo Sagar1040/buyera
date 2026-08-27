@@ -298,9 +298,9 @@ export default function AdminCategoriesPage() {
 
       {/* Category Create / Edit Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white border border-canvas-border p-6 max-w-lg w-full space-y-5 shadow-luxury">
-            <div className="flex items-center justify-between border-b border-canvas-border pb-3">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white border border-canvas-border p-6 max-w-lg w-full space-y-5 shadow-luxury max-h-[90vh] overflow-y-auto my-auto custom-scrollbar">
+            <div className="flex items-center justify-between border-b border-canvas-border pb-3 sticky -top-6 bg-white pt-1 z-10">
               <h3 className="font-editorial-heading text-xl text-charcoal">
                 {editingCategory ? "Edit Category" : "Create New Category"}
               </h3>

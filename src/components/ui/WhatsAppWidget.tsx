@@ -2,11 +2,17 @@
 
 import React, { useState } from "react";
 import { MessageCircle, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useSettings } from "@/context/SettingsContext";
 
 export function WhatsAppWidget() {
+  const pathname = usePathname();
   const { settings } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const cleanNumber = (settings.whatsappNumber || "+919876543210").replace(/[^0-9]/g, "");
 

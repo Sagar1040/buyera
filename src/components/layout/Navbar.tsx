@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   Search,
@@ -26,6 +26,7 @@ import { Logo } from "@/components/ui/Logo";
 
 export function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
   const { wishlistCount } = useWishlist();
   const { cartCount } = useCart();
@@ -35,6 +36,11 @@ export function Navbar() {
   const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+
+  // Hide Storefront Navbar entirely on Admin Panel
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
