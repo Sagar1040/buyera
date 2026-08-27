@@ -22,6 +22,14 @@ const DEFAULT_SITE_SETTINGS = {
   enableRazorpay: true,
   footerBio:
     "BUYERA is dedicated to bringing you the finest modest and ethnic fashion crafted with certified pure fabrics and bespoke tailoring.",
+  storyBadge: "THE BUYERA PHILOSOPHY",
+  storyTitle: "Modest Luxury Envisioned for Every Day",
+  storyDescription: "Handcrafted premium modest fashion designed for everyday elegance.",
+  storyImageUrl: "/story-image.jpg",
+  storyStat1Number: "10,000+",
+  storyStat1Label: "Happy Customers",
+  storyStat2Number: "100%",
+  storyStat2Label: "Pure Breathable Fabrics",
 };
 
 export async function GET() {

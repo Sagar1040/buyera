@@ -395,6 +395,15 @@ model SiteSetting {
   enableRazorpay        Boolean  @default(true)
   // Footer Bio & Policies
   footerBio             String   @default("BUYERA is dedicated to bringing you the finest modest and ethnic fashion crafted with certified pure fabrics and bespoke tailoring.")
+  // Story / Philosophy Section
+  storyBadge            String   @default("THE BUYERA PHILOSOPHY")
+  storyTitle            String   @default("Modest Luxury Envisioned for Every Day")
+  storyDescription      String   @default("Handcrafted premium modest fashion designed for everyday elegance.")
+  storyImageUrl         String   @default("/story-image.jpg")
+  storyStat1Number      String   @default("10,000+")
+  storyStat1Label       String   @default("Happy Customers")
+  storyStat2Number      String   @default("100%")
+  storyStat2Label       String   @default("Pure Breathable Fabrics")
   updatedAt             DateTime @updatedAt
 }
 

@@ -22,13 +22,16 @@ import {
   Save,
   MessageSquare,
   Check,
+  Layers,
+  Award,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { useSettings } from "@/context/SettingsContext";
 
-type TabKey = "general" | "announcement" | "shipping" | "contact" | "footer";
+type TabKey = "general" | "announcement" | "story" | "shipping" | "contact" | "footer";
 
 export default function AdminSettingsPage() {
   const { refreshSettings } = useSettings();
@@ -57,6 +60,15 @@ export default function AdminSettingsPage() {
     enableRazorpay: true,
     footerBio:
       "BUYERA is dedicated to bringing you the finest modest and ethnic fashion crafted with certified pure fabrics and bespoke tailoring.",
+    storyBadge: "THE BUYERA PHILOSOPHY",
+    storyTitle: "Modest Luxury Envisioned for Every Day",
+    storyDescription:
+      "Handcrafted premium modest fashion designed for everyday elegance.",
+    storyImageUrl: "/story-image.jpg",
+    storyStat1Number: "10,000+",
+    storyStat1Label: "Happy Customers",
+    storyStat2Number: "100%",
+    storyStat2Label: "Pure Breathable Fabrics",
   });
 
   const fetchSettings = async () => {
@@ -90,6 +102,19 @@ export default function AdminSettingsPage() {
           footerBio:
             data.settings.footerBio ||
             "BUYERA is dedicated to bringing you the finest modest and ethnic fashion crafted with certified pure fabrics and bespoke tailoring.",
+          storyBadge: data.settings.storyBadge || "THE BUYERA PHILOSOPHY",
+          storyTitle:
+            data.settings.storyTitle ||
+            "Modest Luxury Envisioned for Every Day",
+          storyDescription:
+            data.settings.storyDescription ||
+            "Handcrafted premium modest fashion designed for everyday elegance.",
+          storyImageUrl: data.settings.storyImageUrl || "/story-image.jpg",
+          storyStat1Number: data.settings.storyStat1Number || "10,000+",
+          storyStat1Label: data.settings.storyStat1Label || "Happy Customers",
+          storyStat2Number: data.settings.storyStat2Number || "100%",
+          storyStat2Label:
+            data.settings.storyStat2Label || "Pure Breathable Fabrics",
         });
       }
     } catch (err) {
@@ -372,7 +397,203 @@ export default function AdminSettingsPage() {
           </div>
         )}
 
-        {/* TAB 3: Store & Shipping */}
+        {/* TAB 3: Brand Story / About Section */}
+        {activeTab === "story" && (
+          <div className="bg-white border border-aramyaBorder p-6 sm:p-8 rounded-3xl shadow-card space-y-6 animate-fadeIn">
+            <div className="flex items-center gap-2.5 border-b border-aramyaBorder pb-3">
+              <Sparkles className="w-5 h-5 text-terracotta" />
+              <div>
+                <h2 className="font-editorial-heading text-lg text-charcoal font-normal">
+                  Brand Story & Philosophy Section
+                </h2>
+                <p className="text-[11px] text-charcoal/50">
+                  Customize the homepage brand philosophy narrative, atelier showcase photo, and trust metrics.
+                </p>
+              </div>
+            </div>
+
+            {/* Badges & Titles */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Input
+                label="Story Eyebrow Badge *"
+                required
+                value={form.storyBadge}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, storyBadge: e.target.value }))
+                }
+                helperText="e.g. THE BUYERA PHILOSOPHY"
+              />
+              <Input
+                label="Story Main Headline *"
+                required
+                value={form.storyTitle}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, storyTitle: e.target.value }))
+                }
+                helperText="e.g. Modest Luxury Envisioned for Every Day"
+              />
+            </div>
+
+            {/* Narrative / Description */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-charcoal">
+                Story Narrative / Description *
+              </label>
+              <textarea
+                rows={4}
+                required
+                value={form.storyDescription}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    storyDescription: e.target.value,
+                  }))
+                }
+                placeholder="Handcrafted premium modest fashion designed for everyday elegance..."
+                className="w-full border border-aramyaBorder p-3.5 rounded-2xl text-xs text-charcoal focus:outline-none focus:border-terracotta leading-relaxed"
+              />
+              <p className="text-[11px] text-charcoal/50 font-light">
+                Main editorial paragraph explaining your brand heritage and quality craftsmanship.
+              </p>
+            </div>
+
+            {/* Story Showcase Image Upload */}
+            <div className="space-y-3 pt-2">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-charcoal">
+                Atelier Showcase Image
+              </h3>
+              <ImageUpload
+                type="banner"
+                label="Story Showcase Image (JPG, PNG, WebP)"
+                value={form.storyImageUrl}
+                onChange={(url) =>
+                  setForm((prev) => ({ ...prev, storyImageUrl: url }))
+                }
+                folder="story"
+              />
+              <Input
+                label="Custom Image URL (Optional Direct Override)"
+                value={form.storyImageUrl}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, storyImageUrl: e.target.value }))
+                }
+                helperText="Enter a direct image URL or upload above via Supabase storage."
+              />
+            </div>
+
+            {/* Trust Metrics / Statistics */}
+            <div className="space-y-3 pt-2">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-charcoal">
+                Key Metrics & Brand Statistics
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Metric 1 */}
+                <div className="p-4 border border-aramyaBorder rounded-2xl bg-cream-50/50 space-y-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-terracotta">
+                    Metric #1
+                  </span>
+                  <Input
+                    label="Stat 1 Value *"
+                    required
+                    value={form.storyStat1Number}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        storyStat1Number: e.target.value,
+                      }))
+                    }
+                    placeholder="10,000+"
+                  />
+                  <Input
+                    label="Stat 1 Label *"
+                    required
+                    value={form.storyStat1Label}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        storyStat1Label: e.target.value,
+                      }))
+                    }
+                    placeholder="Happy Customers"
+                  />
+                </div>
+
+                {/* Metric 2 */}
+                <div className="p-4 border border-aramyaBorder rounded-2xl bg-cream-50/50 space-y-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-terracotta">
+                    Metric #2
+                  </span>
+                  <Input
+                    label="Stat 2 Value *"
+                    required
+                    value={form.storyStat2Number}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        storyStat2Number: e.target.value,
+                      }))
+                    }
+                    placeholder="100%"
+                  />
+                  <Input
+                    label="Stat 2 Label *"
+                    required
+                    value={form.storyStat2Label}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        storyStat2Label: e.target.value,
+                      }))
+                    }
+                    placeholder="Pure Breathable Fabrics"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Live Card Preview */}
+            <div className="space-y-2 pt-4 border-t border-aramyaBorder">
+              <span className="text-[10px] uppercase font-bold text-charcoal/50 tracking-widest">
+                Live Brand Story Preview:
+              </span>
+              <div className="bg-cream-50 border border-aramyaBorder rounded-2xl p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-white text-[9px] tracking-[0.2em] uppercase text-terracotta font-bold rounded-full border border-aramyaBorder shadow-xs">
+                    <Layers className="w-3 h-3 text-terracotta" />
+                    {form.storyBadge || "THE BUYERA PHILOSOPHY"}
+                  </span>
+                </div>
+                <h4 className="font-editorial-heading text-xl text-charcoal">
+                  {form.storyTitle || "Modest Luxury Envisioned for Every Day"}
+                </h4>
+                <p className="text-xs text-charcoal/70 font-light leading-relaxed">
+                  {form.storyDescription ||
+                    "Handcrafted premium modest fashion designed for everyday elegance."}
+                </p>
+                <div className="grid grid-cols-2 gap-4 border-t border-aramyaBorder pt-3 text-xs">
+                  <div>
+                    <p className="font-bold text-base text-charcoal">
+                      {form.storyStat1Number || "10,000+"}
+                    </p>
+                    <p className="text-charcoal/60 text-[10px]">
+                      {form.storyStat1Label || "Happy Customers"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-base text-charcoal">
+                      {form.storyStat2Number || "100%"}
+                    </p>
+                    <p className="text-charcoal/60 text-[10px]">
+                      {form.storyStat2Label || "Pure Breathable Fabrics"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: Store & Shipping */}
         {activeTab === "shipping" && (
           <div className="bg-white border border-aramyaBorder p-6 sm:p-8 rounded-3xl shadow-card space-y-6 animate-fadeIn">
             <div className="flex items-center gap-2.5 border-b border-aramyaBorder pb-3">

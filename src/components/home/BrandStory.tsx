@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -13,8 +13,37 @@ import {
   Leaf,
   Layers,
 } from "lucide-react";
+import { useSettings } from "@/context/SettingsContext";
+
+const DEFAULT_STORY_IMAGE =
+  "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200&auto=format&fit=crop";
 
 export function BrandStory() {
+  const { settings } = useSettings();
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+
+  const storyBadge = settings?.storyBadge || "THE BUYERA PHILOSOPHY";
+  const storyTitle =
+    settings?.storyTitle || "Modest Luxury Envisioned for Every Day";
+  const storyDescription =
+    settings?.storyDescription ||
+    "Handcrafted premium modest fashion designed for everyday elegance.";
+
+  // Determine active image URL with resilient fallback
+  const rawImageUrl = settings?.storyImageUrl?.trim();
+  const effectiveImageUrl =
+    rawImageUrl && rawImageUrl !== "/story-image.jpg"
+      ? rawImageUrl
+      : DEFAULT_STORY_IMAGE;
+
+  const currentImage = imgSrc || effectiveImageUrl;
+
+  const storyStat1Number = settings?.storyStat1Number || "10,000+";
+  const storyStat1Label = settings?.storyStat1Label || "Happy Customers";
+  const storyStat2Number = settings?.storyStat2Number || "100%";
+  const storyStat2Label =
+    settings?.storyStat2Label || "Pure Breathable Fabrics";
+
   const trustPillars = [
     {
       icon: Leaf,
@@ -58,7 +87,9 @@ export function BrandStory() {
                 key={idx}
                 className="bg-white border border-aramyaBorder p-6 sm:p-7 rounded-3xl shadow-card hover:shadow-luxury-lg hover:border-terracotta/40 transition-all duration-300 text-center sm:text-left space-y-3.5"
               >
-                <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center mx-auto sm:mx-0 shadow-xs ${pillar.iconColor}`}>
+                <div
+                  className={`w-12 h-12 rounded-2xl border flex items-center justify-center mx-auto sm:mx-0 shadow-xs ${pillar.iconColor}`}
+                >
                   <Icon className="w-5 h-5" />
                 </div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-charcoal">
@@ -78,13 +109,14 @@ export function BrandStory() {
           <div className="lg:col-span-6 relative">
             <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden bg-cream-200 border border-aramyaBorder shadow-luxury-lg">
               <Image
-                src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200&auto=format&fit=crop"
-                alt="BUYERA Master Artisans"
+                src={currentImage}
+                alt={storyTitle}
                 fill
                 className="object-cover"
+                onError={() => setImgSrc(DEFAULT_STORY_IMAGE)}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent" />
-              
+
               {/* Bottom Overlay Info */}
               <div className="absolute bottom-6 left-6 right-6 text-white space-y-1.5">
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-terracotta text-white text-[9px] uppercase font-bold tracking-widest rounded-full">
@@ -109,26 +141,34 @@ export function BrandStory() {
             <div className="space-y-2.5">
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-white text-[10px] tracking-[0.22em] uppercase text-terracotta font-brand-badge font-bold rounded-full border border-aramyaBorder shadow-xs">
                 <Layers className="w-3 h-3 text-terracotta" />
-                THE ARAMYA PHILOSOPHY
+                {storyBadge}
               </span>
               <h2 className="font-editorial-heading text-3xl sm:text-4xl text-charcoal leading-tight font-normal">
-                Modest Luxury Envisioned for Every Day
+                {storyTitle}
               </h2>
             </div>
 
-            <p className="text-xs sm:text-sm text-charcoal/70 font-light leading-relaxed">
-              Founded in Bengaluru, <strong>BUYERA</strong> celebrates graceful modesty with effortless modern silhouettes. From breathable Korean Nida abayas to non-slip Medina silk shaylas and festive lawn suits, our designs embody quiet luxury, ethical craftsmanship, and inclusive custom fit.
+            <p className="text-xs sm:text-sm text-charcoal/70 font-light leading-relaxed whitespace-pre-line">
+              {storyDescription}
             </p>
 
             {/* Key Metrics */}
             <div className="grid grid-cols-2 gap-4 border-y border-aramyaBorder py-5 text-xs">
               <div>
-                <p className="font-bold text-xl text-charcoal tracking-tight">50,000+</p>
-                <p className="text-charcoal/60 text-[11px] font-light">Women Styled Worldwide</p>
+                <p className="font-bold text-xl text-charcoal tracking-tight">
+                  {storyStat1Number}
+                </p>
+                <p className="text-charcoal/60 text-[11px] font-light">
+                  {storyStat1Label}
+                </p>
               </div>
               <div>
-                <p className="font-bold text-xl text-charcoal tracking-tight">100%</p>
-                <p className="text-charcoal/60 text-[11px] font-light">Certified Pure Breathable Weaves</p>
+                <p className="font-bold text-xl text-charcoal tracking-tight">
+                  {storyStat2Number}
+                </p>
+                <p className="text-charcoal/60 text-[11px] font-light">
+                  {storyStat2Label}
+                </p>
               </div>
             </div>
 
@@ -146,3 +186,4 @@ export function BrandStory() {
     </section>
   );
 }
+
