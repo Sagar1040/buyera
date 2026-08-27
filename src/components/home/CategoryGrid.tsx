@@ -9,7 +9,7 @@ interface CategoryStory {
   id: string;
   name: string;
   count?: string;
-  tag?: string;
+  badge?: string;
   image: string;
   href: string;
 }
@@ -28,7 +28,7 @@ export function CategoryGrid({ categories = [] }: CategoryGridProps) {
         id: c.id,
         name: c.name,
         count: "Curated Edit",
-        tag: "ATELIER",
+        badge: c.badge || "",
         image:
           c.imageUrl ||
           "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
@@ -47,7 +47,7 @@ export function CategoryGrid({ categories = [] }: CategoryGridProps) {
                 id: c.id,
                 name: c.name,
                 count: "Curated Edit",
-                tag: "ATELIER",
+                badge: c.badge || "",
                 image:
                   c.imageUrl ||
                   "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
@@ -128,9 +128,11 @@ export function CategoryGrid({ categories = [] }: CategoryGridProps) {
 
               {/* High Contrast Typography Below */}
               <div className="mt-3.5 space-y-0.5">
-                <span className="text-[9px] uppercase tracking-widest text-terracotta font-bold block">
-                  {cat.tag || "ATELIER"}
-                </span>
+                {cat.badge && (
+                  <span className="text-[11px] font-medium tracking-widest text-[#A34828] uppercase block">
+                    {cat.badge}
+                  </span>
+                )}
                 <h3 className="text-xs sm:text-sm font-bold text-charcoal group-hover:text-terracotta transition-colors">
                   {cat.name}
                 </h3>

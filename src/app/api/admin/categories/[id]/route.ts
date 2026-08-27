@@ -10,7 +10,7 @@ export async function PUT(
 ) {
   try {
     const body = await req.json();
-    const { name, slug, description, imageUrl, bannerUrl, isActive, order } = body;
+    const { name, slug, description, imageUrl, bannerUrl, badge, isActive, order } = body;
 
     try {
       const updated = await prisma.category.update({
@@ -21,6 +21,7 @@ export async function PUT(
           ...(description !== undefined && { description }),
           ...(imageUrl !== undefined && { imageUrl }),
           ...(bannerUrl !== undefined && { bannerUrl }),
+          ...(badge !== undefined && { badge: badge.trim() }),
           ...(isActive !== undefined && { isActive: Boolean(isActive) }),
           ...(order !== undefined && { order: Number(order) }),
         },

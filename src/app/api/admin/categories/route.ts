@@ -32,6 +32,7 @@ export async function GET() {
       description: c.description,
       imageUrl: c.imageUrl,
       bannerUrl: c.bannerUrl,
+      badge: c.badge || "",
       isActive: c.isActive,
       order: c.order,
       productsCount: c._count.products || 0,
@@ -51,7 +52,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, slug, description, imageUrl, bannerUrl, isActive = true, order = 0 } = body;
+    const { name, slug, description, imageUrl, bannerUrl, badge, isActive = true, order = 0 } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -74,6 +75,7 @@ export async function POST(req: Request) {
         description: description || "",
         imageUrl: imageUrl || "",
         bannerUrl: bannerUrl || "",
+        badge: badge !== undefined ? badge.trim() : "COLLECTION",
         isActive: Boolean(isActive),
         order: Number(order) || 0,
       },

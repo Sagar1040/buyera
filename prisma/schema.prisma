@@ -102,6 +102,7 @@ model Category {
   description String?
   imageUrl    String?
   bannerUrl   String?
+  badge       String?   @default("COLLECTION")
   isActive    Boolean   @default(true)
   order       Int       @default(0)
   products    Product[]

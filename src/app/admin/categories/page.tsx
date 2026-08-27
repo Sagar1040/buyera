@@ -31,6 +31,7 @@ export default function AdminCategoriesPage() {
     name: "",
     slug: "",
     description: "",
+    badge: "COLLECTION",
     imageUrl: "",
     bannerUrl: "",
     order: 0,
@@ -62,6 +63,7 @@ export default function AdminCategoriesPage() {
       name: "",
       slug: "",
       description: "",
+      badge: "COLLECTION",
       imageUrl:
         "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
       bannerUrl:
@@ -78,6 +80,7 @@ export default function AdminCategoriesPage() {
       name: category.name || "",
       slug: category.slug || "",
       description: category.description || "",
+      badge: category.badge || "",
       imageUrl: category.imageUrl || "",
       bannerUrl: category.bannerUrl || "",
       order: category.order || 0,
@@ -237,7 +240,14 @@ export default function AdminCategoriesPage() {
                           )}
                         </div>
                         <div>
-                          <p className="font-semibold text-charcoal">{c.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-charcoal">{c.name}</p>
+                            {c.badge && (
+                              <span className="px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 text-[9px] font-bold uppercase tracking-wider rounded-xs font-mono">
+                                {c.badge}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[10px] text-charcoal/60 line-clamp-1 max-w-xs">
                             {c.description || "No description"}
                           </p>
@@ -261,32 +271,33 @@ export default function AdminCategoriesPage() {
 
                     <td className="py-3.5 px-4">
                       <span
-                        className={`px-2 py-0.5 text-[9px] uppercase font-bold border ${
+                        className={`px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                           c.isActive
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-rose-50 text-rose-700 border-rose-200"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-rose-50 text-rose-700 border border-rose-200"
                         }`}
                       >
-                        {c.isActive ? "ACTIVE" : "HIDDEN"}
+                        {c.isActive ? "Active" : "Hidden"}
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleOpenEdit(c)}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-canvas-border text-charcoal hover:border-charcoal transition-colors text-xs"
-                      >
-                        <Edit className="w-3.5 h-3.5 text-gold-dark" />
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition-colors text-xs"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Delete
-                      </button>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenEdit(c)}
+                          className="p-1.5 hover:bg-cream-100 text-charcoal/70 hover:text-charcoal transition-colors rounded-xs"
+                          title="Edit Category"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(c.id)}
+                          className="p-1.5 hover:bg-rose-50 text-rose-600/70 hover:text-rose-600 transition-colors rounded-xs"
+                          title="Delete Category"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -332,6 +343,15 @@ export default function AdminCategoriesPage() {
                   placeholder="e.g. luxury-abayas"
                 />
               </div>
+
+              <Input
+                label="Category Sub-badge / Tag (e.g. COLLECTION, ATELIER, EDITION, LUXURY)"
+                value={form.badge}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, badge: e.target.value }))
+                }
+                placeholder="e.g. COLLECTION or ATELIER (Leave blank for no badge)"
+              />
 
               <div className="space-y-1">
                 <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal">
