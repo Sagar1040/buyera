@@ -217,22 +217,21 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
           </div>
 
           {/* Right Column: Hero Banner Image Artwork */}
-          <div className="lg:col-span-5 relative flex justify-center">
+          <div className="lg:col-span-5 relative flex items-center justify-center bg-transparent border-none shadow-none">
             {slide.image ? (
-              <div className="relative w-full max-w-[440px] h-[360px] sm:h-[450px] lg:h-[500px] rounded-3xl overflow-hidden bg-white border-2 border-aramyaBorder shadow-luxury-lg group">
+              <div className="relative w-full max-w-[480px] flex items-center justify-center bg-transparent border-none shadow-none group">
                 <img
                   src={slide.image}
                   alt={slide.title}
                   loading="eager"
-                  className="w-full h-full object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-105"
+                  className="w-full h-auto max-h-[550px] object-contain drop-shadow-none transition-transform duration-700 ease-out group-hover:scale-105"
                   onError={(e) => {
                     console.warn("Banner image failed to load:", slide.image);
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/20 via-transparent to-transparent pointer-events-none" />
               </div>
             ) : (
-              <div className="w-full max-w-[440px] h-[360px] sm:h-[450px] rounded-3xl bg-cream-100 border-2 border-dashed border-aramyaBorder flex items-center justify-center p-8 text-center text-charcoal/40 text-xs">
+              <div className="w-full max-w-[440px] h-[360px] sm:h-[450px] bg-transparent border border-dashed border-aramyaBorder/60 flex items-center justify-center p-8 text-center text-charcoal/40 text-xs">
                 <span>No banner artwork uploaded</span>
               </div>
             )}

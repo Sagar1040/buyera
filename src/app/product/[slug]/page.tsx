@@ -161,13 +161,13 @@ export default function ProductDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
         {/* Left: Multi-Image Gallery */}
         <div className="space-y-4">
-          <div className="relative aspect-[3/4] w-full overflow-hidden bg-cream-100 border border-canvas-border shadow-sm">
+          <div className="relative aspect-[3/4] w-full overflow-hidden bg-transparent border-0 shadow-none flex items-center justify-center">
             <Image
               src={product.images[selectedImage].url}
               alt={product.name}
               fill
               priority
-              className="object-cover object-top"
+              className="object-contain sm:object-cover object-center drop-shadow-none"
             />
             <div className="absolute top-4 left-4 flex flex-col gap-2">
               {product.isNew && <Badge variant="new">NEW ARRIVAL</Badge>}

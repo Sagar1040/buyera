@@ -83,17 +83,17 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-2xl border border-aramyaBorder overflow-hidden transition-all duration-500 hover:shadow-luxury-lg hover:border-terracotta/50">
-      {/* 3:4 Image Container with Dual Image Crossfade */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-cream-100/70">
-        <Link href={`/product/${product.slug}`} className="block w-full h-full relative">
+    <div className="group relative flex flex-col bg-white rounded-2xl border border-aramyaBorder/50 overflow-hidden transition-all duration-500 hover:shadow-luxury-lg hover:border-terracotta/40">
+      {/* 3:4 Image Container with Dual Image Crossfade - Seamless Transparent Background */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-transparent border-0 shadow-none">
+        <Link href={`/product/${product.slug}`} className="block w-full h-full relative bg-transparent">
           {/* Primary Image */}
           <Image
             src={primaryImage}
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            className="object-cover object-top transition-all duration-700 ease-out group-hover:opacity-0 group-hover:scale-105"
+            className="object-contain sm:object-cover object-center transition-all duration-700 ease-out group-hover:opacity-0 group-hover:scale-105 drop-shadow-none"
           />
 
           {/* Secondary Drape Reveal on Hover */}
@@ -102,7 +102,7 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={`${product.name} drape`}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            className="object-cover object-top absolute inset-0 opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-105"
+            className="object-contain sm:object-cover object-center absolute inset-0 opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-105 drop-shadow-none"
           />
         </Link>
 

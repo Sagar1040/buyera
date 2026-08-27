@@ -105,28 +105,16 @@ export function BrandStory() {
 
         {/* 2. Visual Storytelling Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-          {/* Visual Showcase: Arched Collage */}
-          <div className="lg:col-span-6 relative">
-            <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden bg-cream-200 border border-aramyaBorder shadow-luxury-lg">
+          {/* Visual Showcase: Transparent Seamless Display */}
+          <div className="lg:col-span-6 relative flex items-center justify-center">
+            <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden bg-transparent border-0 shadow-none flex items-center justify-center">
               <Image
                 src={currentImage}
                 alt={storyTitle}
                 fill
-                className="object-cover"
+                className="object-contain drop-shadow-none transition-transform duration-700 hover:scale-105"
                 onError={() => setImgSrc(DEFAULT_STORY_IMAGE)}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent" />
-
-              {/* Bottom Overlay Info */}
-              <div className="absolute bottom-6 left-6 right-6 text-white space-y-1.5">
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-terracotta text-white text-[9px] uppercase font-bold tracking-widest rounded-full">
-                  <Award className="w-3 h-3" />
-                  Bespoke Artisanal Atelier
-                </span>
-                <p className="text-xs text-cream-100 font-light leading-relaxed">
-                  Every thread is hand-embroidered with metallic zardozi and resham needlework by generational artisans.
-                </p>
-              </div>
             </div>
 
             {/* Floating Top Badge */}
