@@ -37,11 +37,6 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
 
-  // Hide Storefront Navbar entirely on Admin Panel
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
-
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +53,11 @@ export function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Hide Storefront Navbar entirely on Admin Panel
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const handleSignOut = async () => {
     setUserDropdownOpen(false);
