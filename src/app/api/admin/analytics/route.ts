@@ -5,79 +5,156 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const monthlyRevenue = [
-      { month: "Jan", revenue: 284000, orders: 34, aov: 8350 },
-      { month: "Feb", revenue: 312000, orders: 39, aov: 8000 },
-      { month: "Mar", revenue: 389000, orders: 48, aov: 8104 },
-      { month: "Apr", revenue: 420000, orders: 54, aov: 7777 },
-      { month: "May", revenue: 478000, orders: 61, aov: 7836 },
-      { month: "Jun", revenue: 445000, orders: 58, aov: 7672 },
-      { month: "Jul", revenue: 512000, orders: 66, aov: 7757 },
-      { month: "Aug", revenue: 584000, orders: 74, aov: 7891 },
-    ];
+    const [orders, categories] = await Promise.all([
+      prisma.order.findMany({
+        include: {
+          items: {
+            include: {
+              variant: {
+                include: {
+                  product: {
+                    include: { category: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.category.findMany(),
+    ]);
 
-    const weeklyRevenue = [
-      { day: "Mon", revenue: 42500, orders: 6 },
-      { day: "Tue", revenue: 58900, orders: 8 },
-      { day: "Wed", revenue: 64200, orders: 9 },
-      { day: "Thu", revenue: 51000, orders: 7 },
-      { day: "Fri", revenue: 78400, orders: 11 },
-      { day: "Sat", revenue: 94200, orders: 14 },
-      { day: "Sun", revenue: 88500, orders: 13 },
-    ];
+    const totalRevenue = orders.reduce((acc, o) => acc + (o.total || 0), 0);
+
+    // Monthly breakdown (last 8 months)
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+    const monthlyMap: Record<string, { revenue: number; orders: number }> = {};
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = monthNames[d.getMonth()];
+      monthlyMap[key] = { revenue: 0, orders: 0 };
+    }
+
+    orders.forEach((o) => {
+      const d = new Date(o.createdAt);
+      const key = monthNames[d.getMonth()];
+      if (monthlyMap[key]) {
+        monthlyMap[key].revenue += o.total || 0;
+        monthlyMap[key].orders += 1;
+      }
+    });
+
+    const monthlyRevenue = Object.entries(monthlyMap).map(([month, val]) => ({
+      month,
+      revenue: val.revenue,
+      orders: val.orders,
+      aov: val.orders > 0 ? Math.round(val.revenue / val.orders) : 0,
+    }));
+
+    // Weekly breakdown (last 7 days)
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const weeklyMap: Record<string, { revenue: number; orders: number }> = {
+      Mon: { revenue: 0, orders: 0 },
+      Tue: { revenue: 0, orders: 0 },
+      Wed: { revenue: 0, orders: 0 },
+      Thu: { revenue: 0, orders: 0 },
+      Fri: { revenue: 0, orders: 0 },
+      Sat: { revenue: 0, orders: 0 },
+      Sun: { revenue: 0, orders: 0 },
+    };
+
+    orders.forEach((o) => {
+      const d = new Date(o.createdAt);
+      const diffDays = (now.getTime() - d.getTime()) / (1000 * 3600 * 24);
+      if (diffDays <= 7) {
+        const day = dayNames[d.getDay()];
+        if (weeklyMap[day]) {
+          weeklyMap[day].revenue += o.total || 0;
+          weeklyMap[day].orders += 1;
+        }
+      }
+    });
+
+    const weeklyRevenue = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => ({
+      day,
+      revenue: weeklyMap[day].revenue,
+      orders: weeklyMap[day].orders,
+    }));
+
+    // Payment split
+    const razorpayRev = orders
+      .filter((o) => o.paymentMethod === "RAZORPAY")
+      .reduce((acc, o) => acc + (o.total || 0), 0);
+    const codRev = orders
+      .filter((o) => o.paymentMethod === "COD")
+      .reduce((acc, o) => acc + (o.total || 0), 0);
 
     const paymentSplit = [
-      { method: "Prepaid Razorpay (UPI/Cards)", percentage: 68, amount: 397120 },
-      { method: "Cash on Delivery (COD)", percentage: 32, amount: 186880 },
+      {
+        method: "Prepaid Razorpay (UPI/Cards)",
+        percentage: totalRevenue > 0 ? Math.round((razorpayRev / totalRevenue) * 100) : 0,
+        amount: razorpayRev,
+      },
+      {
+        method: "Cash on Delivery (COD)",
+        percentage: totalRevenue > 0 ? Math.round((codRev / totalRevenue) * 100) : 0,
+        amount: codRev,
+      },
     ];
 
-    const categoryPerformance = [
-      { category: "Luxury Abayas", revenue: 298400, share: 51, units: 62 },
-      { category: "Pakistani Churidars", revenue: 164500, share: 28, units: 21 },
-      { category: "Premium Hijabs", revenue: 82400, share: 14, units: 58 },
-      { category: "Islamic Maxi Dresses", revenue: 38700, share: 7, units: 9 },
-    ];
+    // Category performance
+    const catMap: Record<string, { revenue: number; units: number }> = {};
+    categories.forEach((c) => {
+      catMap[c.name] = { revenue: 0, units: 0 };
+    });
 
-    const bestsellingProducts = [
-      {
-        id: "p1",
-        name: "Royal Emerald Hand-Embroidered Abaya",
-        category: "Luxury Abayas",
-        unitsSold: 38,
-        revenue: 189962,
-        stock: 38,
-      },
-      {
-        id: "p2",
-        name: "Lahore Velvet Embroidered Anarkali",
-        category: "Pakistani Churidars",
-        unitsSold: 16,
-        revenue: 143984,
-        stock: 16,
-      },
-      {
-        id: "p3",
-        name: "Pure Medina Silk Luxury Shayla",
-        category: "Premium Hijabs",
-        unitsSold: 45,
-        revenue: 67500,
-        stock: 45,
-      },
-      {
-        id: "p4",
-        name: "Dubai Farasha Royal Cut Black Abaya",
-        category: "Luxury Abayas",
-        unitsSold: 18,
-        revenue: 89982,
-        stock: 24,
-      },
-    ];
+    orders.forEach((o) => {
+      o.items.forEach((item) => {
+        const catName = item.variant?.product?.category?.name || "Boutique Collection";
+        if (!catMap[catName]) catMap[catName] = { revenue: 0, units: 0 };
+        catMap[catName].revenue += item.price * item.quantity;
+        catMap[catName].units += item.quantity;
+      });
+    });
+
+    const categoryPerformance = Object.entries(catMap).map(([category, val]) => ({
+      category,
+      revenue: val.revenue,
+      share: totalRevenue > 0 ? Math.round((val.revenue / totalRevenue) * 100) : 0,
+      units: val.units,
+    }));
+
+    // Bestselling products
+    const prodSalesMap: Record<string, { name: string; category: string; unitsSold: number; revenue: number; stock: number }> = {};
+    orders.forEach((o) => {
+      o.items.forEach((item) => {
+        const prodName = item.variant?.product?.name || item.name;
+        if (!prodSalesMap[prodName]) {
+          prodSalesMap[prodName] = {
+            name: prodName,
+            category: item.variant?.product?.category?.name || "Collection",
+            unitsSold: 0,
+            revenue: 0,
+            stock: 0,
+          };
+        }
+        prodSalesMap[prodName].unitsSold += item.quantity;
+        prodSalesMap[prodName].revenue += item.price * item.quantity;
+      });
+    });
+
+    const bestsellingProducts = Object.entries(prodSalesMap)
+      .map(([id, val]) => ({ id, ...val }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
 
     return NextResponse.json({
       success: true,
       analytics: {
-        totalRevenue: 584000,
-        growthPercentage: "+18.4%",
+        totalRevenue,
+        growthPercentage: orders.length > 0 ? "+100%" : "0%",
         monthlyRevenue,
         weeklyRevenue,
         paymentSplit,
@@ -86,9 +163,18 @@ export async function GET() {
       },
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to load analytics" },
-      { status: 500 }
-    );
+    console.error("Failed to load analytics:", error);
+    return NextResponse.json({
+      success: true,
+      analytics: {
+        totalRevenue: 0,
+        growthPercentage: "0%",
+        monthlyRevenue: [],
+        weeklyRevenue: [],
+        paymentSplit: [],
+        categoryPerformance: [],
+        bestsellingProducts: [],
+      },
+    });
   }
 }

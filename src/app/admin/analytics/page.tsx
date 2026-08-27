@@ -91,11 +91,11 @@ export default function AdminAnalyticsPage() {
             <DollarSign className="w-4 h-4 text-emerald-700" />
           </div>
           <div className="text-2xl font-bold text-charcoal font-sans">
-            {formatPrice(data?.totalRevenue || 584000)}
+            {formatPrice(data?.totalRevenue || 0)}
           </div>
-          <p className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
-            <ArrowUpRight className="w-3 h-3" />
-            +18.4% compared to previous quarter
+          <p className="text-[11px] text-charcoal/60 flex items-center gap-1">
+            <ArrowUpRight className="w-3 h-3 text-emerald-700" />
+            {data?.totalRevenue > 0 ? "Real verified sales" : "No sales revenue generated yet"}
           </p>
         </div>
 
@@ -107,10 +107,18 @@ export default function AdminAnalyticsPage() {
             <TrendingUp className="w-4 h-4 text-gold-dark" />
           </div>
           <div className="text-2xl font-bold text-charcoal font-sans">
-            ₹7,891
+            {formatPrice(
+              data?.monthlyRevenue?.reduce((acc: number, m: any) => acc + m.revenue, 0) > 0 &&
+              data?.monthlyRevenue?.reduce((acc: number, m: any) => acc + m.orders, 0) > 0
+                ? Math.round(
+                    data.monthlyRevenue.reduce((acc: number, m: any) => acc + m.revenue, 0) /
+                    data.monthlyRevenue.reduce((acc: number, m: any) => acc + m.orders, 0)
+                  )
+                : 0
+            )}
           </div>
           <p className="text-[11px] text-charcoal/60">
-            Average basket size: 2.1 luxury garments
+            Based on completed customer checkouts
           </p>
         </div>
 
@@ -122,10 +130,10 @@ export default function AdminAnalyticsPage() {
             <CreditCard className="w-4 h-4 text-blue-700" />
           </div>
           <div className="text-2xl font-bold text-charcoal font-sans">
-            68.0%
+            {data?.paymentSplit?.[0]?.percentage || 0}%
           </div>
-          <p className="text-[11px] text-emerald-700 font-semibold">
-            Razorpay Instant Settlement Active
+          <p className="text-[11px] text-charcoal/60">
+            Razorpay UPI & Cards share
           </p>
         </div>
       </div>
@@ -145,7 +153,8 @@ export default function AdminAnalyticsPage() {
 
         <div className="h-64 flex items-end justify-between gap-3 pt-6 px-2">
           {monthly.map((m: any, idx: number) => {
-            const heightPercent = Math.round((m.revenue / 600000) * 100);
+            const maxRev = Math.max(...monthly.map((item: any) => item.revenue || 0), 1);
+            const heightPercent = m.revenue > 0 ? Math.round((m.revenue / maxRev) * 100) : 0;
             return (
               <div
                 key={idx}
@@ -181,22 +190,28 @@ export default function AdminAnalyticsPage() {
           </div>
 
           <div className="space-y-4">
-            {paymentSplit.map((p: any, i: number) => (
-              <div key={i} className="space-y-1.5 text-xs">
-                <div className="flex justify-between font-semibold text-charcoal">
-                  <span>{p.method}</span>
-                  <span className="font-mono">{p.percentage}% ({formatPrice(p.amount)})</span>
+            {paymentSplit.length === 0 || data?.totalRevenue === 0 ? (
+              <p className="text-xs text-charcoal/50 py-4 text-center">
+                No transactions recorded yet. Payment distribution will appear with incoming orders.
+              </p>
+            ) : (
+              paymentSplit.map((p: any, i: number) => (
+                <div key={i} className="space-y-1.5 text-xs">
+                  <div className="flex justify-between font-semibold text-charcoal">
+                    <span>{p.method}</span>
+                    <span className="font-mono">{p.percentage}% ({formatPrice(p.amount)})</span>
+                  </div>
+                  <div className="w-full bg-cream-100 h-3 rounded-xs overflow-hidden">
+                    <div
+                      style={{ width: `${p.percentage}%` }}
+                      className={`h-full ${
+                        i === 0 ? "bg-[#C5A880]" : "bg-charcoal"
+                      }`}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-cream-100 h-3 rounded-xs overflow-hidden">
-                  <div
-                    style={{ width: `${p.percentage}%` }}
-                    className={`h-full ${
-                      i === 0 ? "bg-[#C5A880]" : "bg-charcoal"
-                    }`}
-                  />
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -210,28 +225,34 @@ export default function AdminAnalyticsPage() {
           </div>
 
           <div className="space-y-3 text-xs">
-            {categories.map((c: any, i: number) => (
-              <div
-                key={i}
-                className="flex items-center justify-between p-2.5 border border-canvas-border bg-cream-50/50"
-              >
-                <div>
-                  <p className="font-semibold text-charcoal">{c.category}</p>
-                  <p className="text-[10px] text-charcoal/50">
-                    {c.units} units shipped
-                  </p>
-                </div>
+            {categories.length === 0 || data?.totalRevenue === 0 ? (
+              <p className="text-xs text-charcoal/50 py-4 text-center">
+                No category sales recorded yet. Category shares will rank here as products sell.
+              </p>
+            ) : (
+              categories.map((c: any, i: number) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-2.5 border border-canvas-border bg-cream-50/50"
+                >
+                  <div>
+                    <p className="font-semibold text-charcoal">{c.category}</p>
+                    <p className="text-[10px] text-charcoal/50">
+                      {c.units} units shipped
+                    </p>
+                  </div>
 
-                <div className="text-right">
-                  <p className="font-bold text-charcoal font-mono">
-                    {formatPrice(c.revenue)}
-                  </p>
-                  <p className="text-[10px] font-bold text-gold-dark">
-                    {c.share}% of total
-                  </p>
+                  <div className="text-right">
+                    <p className="font-bold text-charcoal font-mono">
+                      {formatPrice(c.revenue)}
+                    </p>
+                    <span className="text-[10px] font-bold text-gold-dark">
+                      {c.share}% of total
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

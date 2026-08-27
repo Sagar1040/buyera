@@ -34,62 +34,6 @@ export default function AdminDashboardPage() {
   const [chartView, setChartView] = useState<"MONTHLY" | "WEEKLY">("MONTHLY");
   const [chartType, setChartType] = useState<"AREA" | "BAR">("BAR");
 
-  const monthlyData = [
-    { label: "Jan", revenue: 284000, height: 48 },
-    { label: "Feb", revenue: 312000, height: 53 },
-    { label: "Mar", revenue: 389000, height: 66 },
-    { label: "Apr", revenue: 420000, height: 71 },
-    { label: "May", revenue: 478000, height: 81 },
-    { label: "Jun", revenue: 445000, height: 76 },
-    { label: "Jul", revenue: 512000, height: 87 },
-    { label: "Aug", revenue: 584000, height: 100 },
-  ];
-
-  const weeklyData = [
-    { label: "Mon", revenue: 42500, height: 45 },
-    { label: "Tue", revenue: 58900, height: 62 },
-    { label: "Wed", revenue: 64200, height: 68 },
-    { label: "Thu", revenue: 51000, height: 54 },
-    { label: "Fri", revenue: 78400, height: 83 },
-    { label: "Sat", revenue: 94200, height: 100 },
-    { label: "Sun", revenue: 88500, height: 94 },
-  ];
-
-  const bestselling = [
-    {
-      name: "Royal Emerald Hand-Embroidered Abaya",
-      category: "Luxury Abayas",
-      sales: "38 units",
-      revenue: 189962,
-      growth: "+24%",
-      image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=200",
-    },
-    {
-      name: "Lahore Velvet Embroidered Anarkali",
-      category: "Pakistani Churidars",
-      sales: "16 units",
-      revenue: 143984,
-      growth: "+18%",
-      image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=200",
-    },
-    {
-      name: "Pure Medina Silk Luxury Shayla",
-      category: "Premium Hijabs",
-      sales: "45 units",
-      revenue: 67500,
-      growth: "+35%",
-      image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=200",
-    },
-    {
-      name: "Dubai Farasha Royal Cut Black Abaya",
-      category: "Luxury Abayas",
-      sales: "18 units",
-      revenue: 89982,
-      growth: "+12%",
-      image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=200",
-    },
-  ];
-
   const fetchStats = async () => {
     setLoading(true);
     try {
@@ -109,44 +53,46 @@ export default function AdminDashboardPage() {
     fetchStats();
   }, []);
 
+  const monthlyData = stats?.monthlyData || [];
+  const weeklyData = stats?.weeklyData || [];
   const activeChartData = chartView === "MONTHLY" ? monthlyData : weeklyData;
 
   const kpis = [
     {
       title: "Gross Sales Revenue",
-      value: stats ? formatPrice(stats.totalRevenue) : "₹5,84,000",
-      trend: "+18.4% vs last period",
+      value: formatPrice(stats?.totalRevenue ?? 0),
+      trend: stats?.totalRevenue > 0 ? "Live verified sales" : "No sales recorded yet",
       subtext: "Live revenue snapshot",
       icon: DollarSign,
       color: "text-emerald-700 bg-emerald-50 border-emerald-200",
     },
     {
       title: "Total Orders",
-      value: stats ? stats.totalOrders.toString() : "42",
-      trend: `${stats?.pendingOrders || 8} awaiting dispatch`,
-      subtext: "Fulfillment rate: 94%",
+      value: stats ? stats.totalOrders.toString() : "0",
+      trend: `${stats?.pendingOrders || 0} awaiting dispatch`,
+      subtext: "Fulfillment pipeline",
       icon: ShoppingBag,
       color: "text-amber-700 bg-amber-50 border-amber-200",
     },
     {
       title: "Catalog Products",
-      value: stats ? stats.totalProducts.toString() : "16",
-      trend: `${stats?.lowStockCount || 3} low stock items`,
+      value: stats ? stats.totalProducts.toString() : "0",
+      trend: `${stats?.lowStockCount || 0} low stock items`,
       subtext: "Live active silhouettes",
       icon: Package,
       color: "text-gold-dark bg-gold/10 border-gold/30",
     },
     {
       title: "Registered Patrons",
-      value: stats ? stats.totalCustomers.toString() : "128",
-      trend: "+12 new patrons",
-      subtext: "VIP loyalty members",
+      value: stats ? stats.totalCustomers.toString() : "0",
+      trend: "Active customer registry",
+      subtext: "Customer accounts",
       icon: Users,
       color: "text-purple-700 bg-purple-50 border-purple-200",
     },
     {
       title: "Active Promotions",
-      value: stats ? `${stats.activeCoupons || 4} Coupons` : "4 Coupons",
+      value: stats ? `${stats.activeCoupons || 0} Coupons` : "0 Coupons",
       trend: "Discounts live",
       subtext: "Cart incentives active",
       icon: TicketPercent,
@@ -284,7 +230,7 @@ export default function AdminDashboardPage() {
 
           {/* Interactive Bar Chart Visualization */}
           <div className="h-64 flex items-end justify-between gap-2 sm:gap-4 pt-8 px-2">
-            {activeChartData.map((item, i) => (
+            {activeChartData.map((item: any, i: number) => (
               <div
                 key={i}
                 className="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer"
@@ -311,9 +257,15 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center justify-between border-t border-canvas-border pt-3 text-xs text-charcoal/60">
-            <span>Peak Period: August (₹5,84,000)</span>
+            <span>
+              {stats?.totalRevenue > 0
+                ? `Total Net Revenue: ${formatPrice(stats.totalRevenue)}`
+                : "No sales revenue generated yet"}
+            </span>
             <span className="font-semibold text-emerald-700">
-              Avg Growth Rate: +18.4% MoM
+              {stats?.totalOrders > 0
+                ? `${stats.totalOrders} total verified orders`
+                : "Waiting for first storefront order"}
             </span>
           </div>
         </div>
@@ -331,33 +283,31 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="divide-y divide-canvas-border/60 mt-3">
-              {bestselling.map((item, idx) => (
-                <div key={idx} className="py-3 flex items-center gap-3">
-                  <div className="w-10 h-12 bg-cream-100 shrink-0 border border-canvas-border relative overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-charcoal truncate">
-                      {item.name}
-                    </p>
-                    <p className="text-[10px] text-charcoal/50">
-                      {item.category} • {item.sales}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold font-mono text-charcoal">
-                      {formatPrice(item.revenue)}
-                    </p>
-                    <span className="text-[9px] font-bold text-emerald-700 font-mono">
-                      {item.growth}
-                    </span>
-                  </div>
+              {(stats?.bestsellingProducts || []).length === 0 ? (
+                <div className="py-10 text-center text-xs text-charcoal/50 space-y-1">
+                  <Package className="w-6 h-6 mx-auto text-charcoal/30 mb-2" />
+                  <p className="font-medium text-charcoal/70">No sales recorded yet</p>
+                  <p className="text-[10px]">Top-performing garments will automatically appear here once customer orders arrive.</p>
                 </div>
-              ))}
+              ) : (
+                stats.bestsellingProducts.map((item: any, idx: number) => (
+                  <div key={idx} className="py-3 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-charcoal truncate">
+                        {item.name}
+                      </p>
+                      <p className="text-[10px] text-charcoal/50">
+                        {item.category} • {item.unitsSold} units sold
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-bold font-mono text-charcoal">
+                        {formatPrice(item.revenue)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -387,7 +337,7 @@ export default function AdminDashboardPage() {
               href="/admin/orders"
               className="text-xs text-gold-dark hover:text-charcoal font-semibold uppercase tracking-wider flex items-center gap-1"
             >
-              All Orders ({stats?.totalOrders || 42}) →
+              All Orders ({stats?.totalOrders || 0}) →
             </Link>
           </div>
 
@@ -403,38 +353,48 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-canvas-border/50">
-                {(stats?.recentOrders || []).map((ord: any) => (
-                  <tr key={ord.id} className="hover:bg-cream-50 transition-colors">
-                    <td className="py-3 font-mono font-semibold text-charcoal">
-                      {ord.orderNumber}
-                    </td>
-                    <td className="py-3">
-                      <p className="font-medium text-charcoal">{ord.customerName}</p>
-                      <p className="text-[10px] text-charcoal/50">{ord.customerEmail}</p>
-                    </td>
-                    <td className="py-3 font-mono font-bold text-charcoal">
-                      {formatPrice(ord.total)}
-                    </td>
-                    <td className="py-3">
-                      <span className="px-2 py-0.5 bg-cream-100 border border-canvas-border text-[9px] uppercase font-bold">
-                        {ord.paymentMethod} • {ord.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      <span
-                        className={`px-2 py-0.5 text-[9px] uppercase font-bold border ${
-                          ord.orderStatus === "DELIVERED"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : ord.orderStatus === "SHIPPED"
-                            ? "bg-blue-50 text-blue-700 border-blue-200"
-                            : "bg-amber-50 text-amber-700 border-amber-200"
-                        }`}
-                      >
-                        {ord.orderStatus}
-                      </span>
+                {(stats?.recentOrders || []).length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-10 text-center text-charcoal/50 text-xs">
+                      <ShoppingBag className="w-6 h-6 mx-auto text-charcoal/30 mb-2" />
+                      <p className="font-medium text-charcoal/70">No live orders placed yet</p>
+                      <p className="text-[10px] text-charcoal/40">Incoming orders from customers will appear here in real time.</p>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  stats.recentOrders.map((ord: any) => (
+                    <tr key={ord.id} className="hover:bg-cream-50 transition-colors">
+                      <td className="py-3 font-mono font-semibold text-charcoal">
+                        {ord.orderNumber}
+                      </td>
+                      <td className="py-3">
+                        <p className="font-medium text-charcoal">{ord.customerName}</p>
+                        <p className="text-[10px] text-charcoal/50">{ord.customerEmail}</p>
+                      </td>
+                      <td className="py-3 font-mono font-bold text-charcoal">
+                        {formatPrice(ord.total)}
+                      </td>
+                      <td className="py-3">
+                        <span className="px-2 py-0.5 bg-cream-100 border border-canvas-border text-[9px] uppercase font-bold">
+                          {ord.paymentMethod} • {ord.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        <span
+                          className={`px-2 py-0.5 text-[9px] uppercase font-bold border ${
+                            ord.orderStatus === "DELIVERED"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : ord.orderStatus === "SHIPPED"
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : "bg-amber-50 text-amber-700 border-amber-200"
+                          }`}
+                        >
+                          {ord.orderStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
